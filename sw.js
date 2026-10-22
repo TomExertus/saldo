@@ -1,4 +1,4 @@
-const CACHE_NAME = 'saldo-movimenti-v5';
+const CACHE_NAME = 'saldo-movimenti-v6';
 const ASSETS = [
   './',
   './index.html',
@@ -7,8 +7,9 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
 });
 
@@ -20,18 +21,18 @@ self.addEventListener('activate', event => {
   );
 });
 
+// Network-First strategy so updates on GitHub Pages appear immediately on reload
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      const fetchPromise = fetch(event.request).then(networkResponse => {
+    fetch(event.request, { cache: 'no-store' })
+      .then(networkResponse => {
         if (networkResponse && networkResponse.status === 200) {
           const copy = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
         }
         return networkResponse;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
+      })
+      .catch(() => caches.match(event.request))
   );
 });

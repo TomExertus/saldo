@@ -477,8 +477,8 @@
       </div>
     </div>
     <div class="cloud-pill-bar">
-      <button id="btnICloudShare" class="pill-btn primary" onclick="saveToFileWithPicker()">📁 Salva su File…</button>
-      <button class="pill-btn" onclick="document.getElementById('importFileTop').click()">📂 Apri File…</button>
+      <button id="btnICloudShare" class="pill-btn primary" onclick="saveToFileWithPicker()">📁 Salva su File</button>
+      <button class="pill-btn" onclick="document.getElementById('importFileTop').click()">📂 Apri File</button>
       <button id="btnSyncReload" class="pill-btn hidden" onclick="reloadFromFile()">🔄 Ricarica dal file</button>
       <button id="btnSyncDisconnect" class="pill-btn hidden" onclick="disconnectSyncFile()">✕ Scollega file</button>
       <input type="file" id="importFileTop" accept=".json,application/json" class="hidden" onchange="importData(event)">
@@ -860,11 +860,11 @@
     <div class="panel">
       <h3 class="panel-title">📁 Salvataggio su File & Backup</h3>
       <div class="subtitle" style="margin-bottom:14px;">
-        Premi <strong>"Salva su File…"</strong> per scegliere la cartella di destinazione (es. nell'app <em>File</em> su iPhone/iPad o in una cartella sul Mac) e salvare il tuo file <code>saldo-dati.json</code>.
+        Premi <strong>"Salva su File"</strong> per scegliere la cartella di destinazione (es. nell'app <em>File</em> su iPhone/iPad o in una cartella sul Mac) e salvare il tuo file <code>saldo-dati.json</code>.
       </div>
       <div class="actions-row">
-        <button class="btn btn-primary" onclick="saveToFileWithPicker()">📁 Salva su File…</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Apri File…</button>
+        <button class="btn btn-primary" onclick="saveToFileWithPicker()">📁 Salva su File</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Apri File</button>
         <button class="btn btn-success" onclick="exportData()">📥 Scarica Backup JSON</button>
         <input type="file" id="importFile" accept=".json,application/json" class="hidden" onchange="importData(event)">
         <button class="btn btn-danger" onclick="resetData()">🗑 Cancella tutto</button>
@@ -879,7 +879,16 @@
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      reg.update();
+    }).catch(() => {});
+  });
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
   });
 }
 
@@ -1106,7 +1115,7 @@ function renderSyncStatus() {
     if (btnRel) btnRel.classList.remove('hidden');
     if (btnDis) btnDis.classList.remove('hidden');
   } else {
-    el.innerHTML = `📁 Salvato sul dispositivo · Usa "Salva su File…" per scegliere dove salvare`;
+    el.innerHTML = `📁 Salvato sul dispositivo · Usa "Salva su File" per scegliere dove salvare`;
     if (btnRel) btnRel.classList.add('hidden');
     if (btnDis) btnDis.classList.add('hidden');
   }
@@ -1194,7 +1203,7 @@ function saveState(opts) {
   idbSaveStateBackup(state);
   if (fileHandle) writeToFileHandle();
   if (!(opts && opts.silent)) {
-    if (saved || fileHandle) showToast(fileHandle ? 'Salvato su iCloud ✓' : 'Salvato ✓');
+    if (saved || fileHandle) showToast(fileHandle ? 'Salvato su File ✓' : 'Salvato ✓');
     else showToast('Impossibile salvare', true);
   }
   renderAll();
