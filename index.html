@@ -2,9 +2,9 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
-<meta name="theme-color" content="#0f172a">
-<meta name="color-scheme" content="dark light">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#070b14">
+<meta name="color-scheme" content="dark">
 <meta name="format-detection" content="telephone=no">
 
 <!-- iOS / macOS PWA -->
@@ -13,127 +13,284 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Saldo">
 <link rel="manifest" href="manifest.json">
-
-<!-- Icona inline (SVG): funziona come favicon e come icona "Aggiungi a Home" -->
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f172a'/><text x='50' y='68' font-size='60' text-anchor='middle' font-family='Arial'>%F0%9F%92%B0</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23070b14'/><text x='50' y='68' font-size='60' text-anchor='middle' font-family='Arial'>%F0%9F%92%B0</text></svg>">
 
 <title>Saldo e Movimenti</title>
 <style>
   :root {
-    --bg: #0f172a;
-    --panel: #1e293b;
-    --panel-2: #334155;
-    --text: #e2e8f0;
+    --bg: #070b14;
+    --bg-grad: radial-gradient(circle at 15% 0%, rgba(56, 189, 248, 0.14), transparent 45%),
+               radial-gradient(circle at 85% 10%, rgba(168, 85, 247, 0.11), transparent 40%),
+               #070b14;
+    --panel: rgba(22, 31, 51, 0.72);
+    --panel-solid: #161f33;
+    --panel-2: rgba(40, 54, 85, 0.65);
+    --text: #f8fafc;
     --muted: #94a3b8;
     --accent: #38bdf8;
-    --green: #22c55e;
-    --red: #ef4444;
-    --yellow: #eab308;
-    --border: #334155;
+    --accent-grad: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
+    --green: #10b981;
+    --red: #f43f5e;
+    --yellow: #f59e0b;
+    --border: rgba(255, 255, 255, 0.09);
+    --glass-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.45);
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { overscroll-behavior-y: contain; }
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg-grad);
+    background-attachment: fixed;
     color: var(--text);
     min-height: 100vh;
-    padding: 20px;
-    padding-top: max(20px, env(safe-area-inset-top));
-    padding-bottom: max(30px, env(safe-area-inset-bottom));
+    padding: 16px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: calc(105px + env(safe-area-inset-bottom));
     padding-left: max(16px, env(safe-area-inset-left));
     padding-right: max(16px, env(safe-area-inset-right));
     -webkit-text-size-adjust: 100%;
   }
-  .container { max-width: 1200px; margin: 0 auto; }
-  h1 { margin: 0 0 6px 0; font-size: 28px; }
-  .subtitle { color: var(--muted); margin-bottom: 20px; font-size: 14px; }
+  .container { max-width: 960px; margin: 0 auto; }
+
+  /* TOP HEADER */
+  .app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-logo {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(56,189,248,0.22), rgba(99,102,241,0.22));
+    border: 1px solid rgba(56,189,248,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 16px rgba(56,189,248,0.18);
+  }
+  h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+  .subtitle { color: var(--muted); font-size: 13px; margin: 2px 0 0 0; }
+
+  .cloud-pill-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .pill-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 13px;
+    border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    cursor: pointer;
+    transition: transform 0.15s, background 0.2s;
+  }
+  .pill-btn:active { transform: scale(0.96); }
+  .pill-btn.primary {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: rgba(56, 189, 248, 0.45);
+    color: #7dd3fc;
+  }
+  .pill-btn.synced {
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #6ee7b7;
+  }
 
   .install-banner {
-    background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(34,197,94,0.12));
-    border: 1px solid rgba(56,189,248,0.45);
-    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(56,189,248,0.16), rgba(99,102,241,0.14));
+    border: 1px solid rgba(56,189,248,0.4);
+    border-radius: 16px;
     padding: 12px 16px;
     margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    font-size: 13px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; font-size: 13px;
+    backdrop-filter: blur(12px);
   }
 
+  /* HERO BALANCE CARD */
   .balance-card {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    background: linear-gradient(145deg, rgba(30, 41, 69, 0.85) 0%, rgba(13, 20, 38, 0.92) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 24px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--glass-shadow);
+    position: relative;
+    overflow: hidden;
   }
-  .balance-label { color: var(--muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
-  .balance-amount { font-size: 48px; font-weight: 700; margin-top: 8px; }
-  .balance-positive { color: var(--green); }
+  .balance-top {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;
+  }
+  .balance-label {
+    color: var(--muted); font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .balance-amount {
+    font-size: 44px; font-weight: 800; margin-top: 4px;
+    letter-spacing: -1px; cursor: pointer;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex; align-items: baseline; gap: 10px;
+    transition: opacity 0.15s;
+  }
+  .balance-amount:hover { opacity: 0.85; }
+  .balance-edit-badge {
+    font-size: 12px; font-weight: 600;
+    padding: 5px 10px; border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border);
+    color: var(--text); cursor: pointer;
+  }
+  .balance-positive { color: #34d399; }
   .balance-negative { color: var(--red); }
 
-  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 20px; }
-  .stat {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px; margin-top: 18px;
   }
-  .stat-label { color: var(--muted); font-size: 12px; text-transform: uppercase; }
-  .stat-value { font-size: 22px; font-weight: 600; margin-top: 4px; }
-
-  .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
-  .tab {
-    padding: 10px 16px;
-    background: var(--panel);
+  .stat {
+    background: rgba(255, 255, 255, 0.035);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 16px;
+    padding: 12px 14px;
+  }
+  .stat-label { color: var(--muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+  .stat-value { font-size: 18px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+
+  /* BUDGET CARD */
+  .budget-card {
+    margin-top: 16px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.13), rgba(16, 185, 129, 0.08));
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    border-radius: 18px;
+    padding: 16px 18px;
+  }
+  .budget-card.warn { background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(244, 63, 94, 0.08)); border-color: rgba(245, 158, 11, 0.4); }
+  .budget-card.danger { background: linear-gradient(135deg, rgba(244, 63, 94, 0.18), rgba(244, 63, 94, 0.06)); border-color: rgba(244, 63, 94, 0.45); }
+  .budget-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .budget-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .budget-amount { font-size: 28px; font-weight: 800; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .budget-amount.pos { color: #34d399; }
+  .budget-amount.neg { color: var(--red); }
+  .budget-amount.warn { color: var(--yellow); }
+
+  .budget-progress-track {
+    width: 100%; height: 8px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 10px 0 8px 0;
+  }
+  .budget-progress-fill {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, #34d399, #38bdf8);
+    transition: width 0.35s ease;
+  }
+  .budget-sub { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .budget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+    gap: 8px; margin-top: 12px;
+  }
+  .budget-cell {
+    background: rgba(7, 11, 20, 0.42);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 9px 11px;
+  }
+  .budget-cell.editable { cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+  .budget-cell.editable:hover { background: rgba(56, 189, 248, 0.15); border-color: rgba(56, 189, 248, 0.4); }
+  .budget-cell-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+  .budget-cell-edit-icon { opacity: 0.75; font-size: 11px; }
+  .budget-cell-value { font-size: 15px; font-weight: 700; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .budget-cell input.inline-edit {
+    width: 100%; min-height: 0; padding: 4px 6px; font-size: 15px; font-weight: 700;
+    background: var(--bg); border: 1px solid var(--accent); border-radius: 6px; color: var(--text); margin-top: 2px;
+  }
+
+  /* FLOATING BOTTOM / TOP NAVIGATION BAR */
+  .tabs-nav {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 18px;
+    background: var(--panel);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 6px;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+  }
+  .tab {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px;
+    padding: 9px 6px;
+    border-radius: 12px;
     cursor: pointer;
     color: var(--muted);
-    transition: all 0.2s;
-    font-size: 14px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    font-size: 11.5px; font-weight: 600;
+    user-select: none;
   }
-  .tab:hover { background: var(--panel-2); color: var(--text); }
-  .tab.active { background: var(--accent); color: #0f172a; font-weight: 600; border-color: var(--accent); }
+  .tab-icon { font-size: 18px; line-height: 1; }
+  .tab:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .tab.active {
+    background: var(--accent-grad);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(56, 189, 248, 0.35);
+  }
 
+  /* PANELS */
   .panel {
     background: var(--panel);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 20px;
     padding: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
+    box-shadow: var(--glass-shadow);
   }
-  .panel-title { font-size: 18px; margin: 0 0 16px 0; display: flex; justify-content: space-between; align-items: center; }
+  .panel-title {
+    font-size: 17px; font-weight: 700; margin: 0 0 14px 0;
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+  }
 
+  /* FORMS & SEGMENTED TOGGLE */
   form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
   input, select, textarea {
     width: 100%;
-    padding: 12px 12px;
-    background: var(--bg);
+    padding: 11px 13px;
+    background: rgba(7, 11, 20, 0.65);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 12px;
     color: var(--text);
     font-size: 16px;
     font-family: inherit;
     appearance: none;
     -webkit-appearance: none;
     min-height: 44px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
   }
   input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    min-height: 20px;
-    appearance: auto;
-    -webkit-appearance: checkbox;
-    accent-color: var(--accent);
-    padding: 0;
+    width: 20px; height: 20px; min-height: 20px;
+    appearance: auto; -webkit-appearance: checkbox;
+    accent-color: var(--accent); padding: 0;
   }
   select {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='%2394a3b8' d='M6 8L0 0h12z'/></svg>");
@@ -141,209 +298,227 @@
     background-position: right 12px center;
     padding-right: 32px;
   }
-  input[type="date"], input[type="time"] { min-height: 44px; }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
   .form-full { grid-column: 1 / -1; }
   .checkbox-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    color: var(--text);
-    cursor: pointer;
-    padding: 4px 0;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; color: var(--text); cursor: pointer; padding: 4px 0;
   }
+
+  .segmented-tipo {
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: rgba(7, 11, 20, 0.65);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px; gap: 4px;
+  }
+  .seg-btn {
+    border: none; background: transparent; color: var(--muted);
+    font-size: 14px; font-weight: 700;
+    padding: 8px 10px; border-radius: 9px;
+    cursor: pointer; transition: all 0.18s;
+  }
+  .seg-btn.active-uscita { background: rgba(244, 63, 94, 0.22); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.45); }
+  .seg-btn.active-entrata { background: rgba(16, 185, 129, 0.22); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.45); }
+
   .btn {
     padding: 12px 18px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 600;
-    transition: opacity 0.2s;
-    min-height: 44px;
-    touch-action: manipulation;
+    border: none; border-radius: 12px;
+    cursor: pointer; font-size: 15px; font-weight: 700;
+    transition: transform 0.12s, opacity 0.2s;
+    min-height: 44px; touch-action: manipulation;
   }
-  .btn:hover { opacity: 0.85; }
-  .btn-primary { background: var(--accent); color: #0f172a; }
+  .btn:active { transform: scale(0.98); }
+  .btn:hover { opacity: 0.92; }
+  .btn-primary { background: var(--accent-grad); color: #fff; box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3); }
   .btn-success { background: var(--green); color: white; }
-  .btn-danger { background: var(--red); color: white; }
-  .btn-secondary { background: var(--panel-2); color: var(--text); }
-  .btn-small { padding: 6px 10px; font-size: 12px; min-height: 32px; }
+  .btn-danger { background: rgba(244, 63, 94, 0.18); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.35); }
+  .btn-secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-small { padding: 6px 11px; font-size: 12px; min-height: 32px; border-radius: 9px; }
 
-  .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  table { width: 100%; border-collapse: collapse; min-width: 520px; }
-  th, td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
-  th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; white-space: nowrap; }
-  tr:hover td { background: rgba(255,255,255,0.02); }
-  .amount-pos { color: var(--green); font-weight: 600; }
-  .amount-neg { color: var(--red); font-weight: 600; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-  .badge-recurring { background: rgba(56,189,248,0.2); color: var(--accent); }
-  .badge-onetime { background: rgba(148,163,184,0.2); color: var(--muted); }
-  .badge-indefinite { background: rgba(234,179,8,0.2); color: var(--yellow); }
+  /* MODERN CARD LIST FOR TRANSACTIONS (Replaces horizontal-scroll table on mobile) */
+  .tx-list { display: flex; flex-direction: column; gap: 8px; }
+  .tx-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    transition: background 0.15s;
+  }
+  .tx-item:hover { background: rgba(255, 255, 255, 0.055); }
+  .tx-avatar {
+    width: 42px; height: 42px; border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .tx-main { flex: 1; min-width: 0; }
+  .tx-title {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .tx-meta {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    font-size: 12px; color: var(--muted); margin-top: 3px;
+  }
+  .tx-right { text-align: right; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .tx-amount { font-size: 15.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .amount-pos { color: #34d399; font-weight: 700; }
+  .amount-neg { color: var(--red); font-weight: 700; }
+  .badge { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 700; }
+  .badge-recurring { background: rgba(56,189,248,0.18); color: #7dd3fc; }
+  .badge-onetime { background: rgba(148,163,184,0.16); color: var(--muted); }
+  .badge-indefinite { background: rgba(245,158,11,0.2); color: #fcd34d; }
 
   .actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
-  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
-  .toolbar input, .toolbar select { width: auto; min-width: 140px; }
+  .empty-state { text-align: center; padding: 36px 20px; color: var(--muted); font-size: 14px; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
+  .toolbar input { flex: 1; min-width: 160px; }
+  .toolbar select { width: auto; min-width: 150px; }
 
   .hidden { display: none !important; }
-  .month-nav { display: flex; align-items: center; gap: 12px; }
-  .month-nav button { background: var(--panel-2); border: none; color: var(--text); padding: 6px 12px; border-radius: 6px; cursor: pointer; }
-
-  .budget-card {
-    margin-top: 18px;
-    background: linear-gradient(135deg, rgba(56,189,248,0.12), rgba(34,197,94,0.08));
-    border: 1px solid rgba(56,189,248,0.3);
-    border-radius: 12px;
-    padding: 16px 18px;
+  .month-nav { display: flex; align-items: center; gap: 8px; }
+  .month-nav button {
+    background: var(--panel-2); border: 1px solid var(--border);
+    color: var(--text); padding: 6px 11px; border-radius: 9px; cursor: pointer; font-weight: 600;
   }
-  .budget-card.warn { background: linear-gradient(135deg, rgba(234,179,8,0.15), rgba(239,68,68,0.08)); border-color: rgba(234,179,8,0.4); }
-  .budget-card.danger { background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05)); border-color: rgba(239,68,68,0.4); }
-  .budget-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
-  .budget-title { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-  .budget-amount { font-size: 30px; font-weight: 700; }
-  .budget-amount.pos { color: var(--green); }
-  .budget-amount.neg { color: var(--red); }
-  .budget-amount.warn { color: var(--yellow); }
-  .budget-sub { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
-  .budget-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 12px; }
-  .budget-cell { background: rgba(0,0,0,0.2); border-radius: 8px; padding: 10px 12px; }
-  .budget-cell.editable { cursor: pointer; transition: background 0.15s; }
-  .budget-cell.editable:hover { background: rgba(56,189,248,0.15); }
-  .budget-cell-label { font-size: 11px; color: var(--muted); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
-  .budget-cell-edit-icon { opacity: 0.6; font-size: 12px; }
-  .budget-cell-value { font-size: 16px; font-weight: 600; margin-top: 2px; }
-  .budget-cell input.inline-edit {
-    width: 100%; min-height: 0; padding: 4px 6px; font-size: 16px; font-weight: 600;
-    background: var(--bg); border: 1px solid var(--accent); border-radius: 6px; color: var(--text); margin-top: 2px;
+
+  /* STATS DONUT + BARS */
+  .stats-overview {
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+    margin-bottom: 18px; padding: 14px;
+    background: rgba(7, 11, 20, 0.4); border-radius: 16px; border: 1px solid var(--border);
+  }
+  .donut-ring {
+    width: 110px; height: 110px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; flex-shrink: 0;
+  }
+  .donut-hole {
+    width: 74px; height: 74px; border-radius: 50%;
+    background: var(--panel-solid);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--muted); font-weight: 600;
+  }
+  .donut-hole strong { font-size: 13px; color: var(--text); margin-top: 2px; }
+
+  .cat-bar-row { display: grid; grid-template-columns: 38px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .cat-bar-row:last-child { border-bottom: none; }
+  .cat-bar-track { background: rgba(255,255,255,0.06); height: 8px; border-radius: 999px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+  .cat-bar-name { font-weight: 600; margin-bottom: 5px; font-size: 14px; }
+  .cat-bar-amount { font-weight: 700; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .cat-pct { font-size: 11.5px; color: var(--muted); font-weight: 500; }
+
+  /* FLOATING ACTION BUTTON (FAB) */
+  .fab-add {
+    position: fixed;
+    right: max(20px, env(safe-area-inset-right));
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    width: 54px; height: 54px;
+    border-radius: 50%;
+    background: var(--accent-grad);
+    color: #fff;
+    border: none;
+    box-shadow: 0 8px 24px rgba(56, 189, 248, 0.45);
+    font-size: 28px; font-weight: 400;
+    display: none; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 900;
   }
 
   .toast {
-    position: fixed;
-    left: 50%;
-    bottom: 24px;
+    position: fixed; left: 50%;
+    bottom: calc(90px + env(safe-area-inset-bottom));
     transform: translate(-50%, 80px);
-    background: var(--green);
-    color: white;
-    padding: 10px 18px;
-    border-radius: 999px;
-    font-size: 14px;
-    font-weight: 600;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    opacity: 0;
-    z-index: 2000;
-    pointer-events: none;
+    background: var(--green); color: white;
+    padding: 10px 18px; border-radius: 999px;
+    font-size: 14px; font-weight: 700;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+    opacity: 0; z-index: 2000; pointer-events: none;
   }
   .toast.show { transform: translate(-50%, 0); opacity: 1; }
   .toast.error { background: var(--red); }
 
-  .storage-warn {
-    background: rgba(239,68,68,0.15);
-    border: 1px solid rgba(239,68,68,0.4);
-    color: #fecaca;
-    padding: 12px 16px;
-    border-radius: 10px;
-    margin-bottom: 16px;
-    font-size: 14px;
-  }
-
-  .sync-bar {
-    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 12px; padding: 12px 14px; margin-bottom: 16px;
-  }
-  .sync-status { font-size: 13px; color: var(--muted); flex: 1; min-width: 200px; }
-  .sync-status strong { color: var(--text); }
-  .sync-status.connected strong { color: var(--green); }
-  .sync-status.warning strong { color: var(--yellow); }
-
-  .cat-icon { display: inline-flex; align-items: center; gap: 6px; }
-  .cat-emoji { font-size: 18px; line-height: 1; }
-  .cat-bar-row { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .cat-bar-row:last-child { border-bottom: none; }
-  .cat-bar-track { background: rgba(255,255,255,0.06); height: 8px; border-radius: 4px; overflow: hidden; position: relative; }
-  .cat-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
-  .cat-bar-name { font-weight: 500; margin-bottom: 4px; font-size: 14px; }
-  .cat-bar-meta { font-size: 12px; color: var(--muted); }
-  .cat-bar-amount { font-weight: 600; text-align: right; white-space: nowrap; }
-  .cat-pct { font-size: 11px; color: var(--muted); }
-
-  @media (max-width: 700px) {
-    body { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
-    h1 { font-size: 22px; }
-    .balance-card { padding: 20px; }
-    .balance-amount { font-size: 34px; }
-    .panel { padding: 14px; }
-    .panel-title { font-size: 16px; flex-wrap: wrap; gap: 8px; }
-    form { grid-template-columns: 1fr 1fr; }
-    .form-full { grid-column: 1 / -1; }
+  @media (max-width: 760px) {
     .stats-row { grid-template-columns: 1fr 1fr; }
-    .tab { padding: 10px 12px; font-size: 13px; flex: 1 1 calc(33.33% - 4px); text-align: center; }
-    .toolbar { flex-direction: column; align-items: stretch; }
-    .toolbar input, .toolbar select { width: 100%; }
-    .month-nav { width: 100%; justify-content: space-between; }
-    .actions-row { flex-direction: column; align-items: stretch; }
-    .actions-row .btn { width: 100%; }
+    .balance-amount { font-size: 36px; }
+    .panel { padding: 16px; }
+    form { grid-template-columns: 1fr 1fr; }
+    /* Docked iOS Bottom Tab Bar on Mobile */
+    .tabs-nav {
+      position: fixed;
+      left: 10px; right: 10px;
+      bottom: max(10px, env(safe-area-inset-bottom));
+      margin-bottom: 0;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.88);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+    .fab-add { display: flex; }
   }
-  @media (max-width: 420px) {
+  @media (max-width: 440px) {
     form { grid-template-columns: 1fr; }
-    .stats-row { grid-template-columns: 1fr; }
-    .balance-amount { font-size: 30px; }
-    .tab { flex: 1 1 calc(50% - 4px); }
+    .balance-amount { font-size: 32px; }
+    .tab { font-size: 10px; padding: 8px 2px; }
   }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>💰 Saldo e Movimenti</h1>
-  <div class="subtitle">Tieni traccia di entrate, uscite, spese ricorrenti, indefinite, promemoria e iCloud</div>
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="brand">
+      <div class="brand-logo">💰</div>
+      <div>
+        <h1>Saldo e Movimenti</h1>
+        <div class="subtitle" id="syncStatus">☁️ Salvato sul dispositivo · Sincronizzazione iCloud pronta</div>
+      </div>
+    </div>
+    <div class="cloud-pill-bar">
+      <button id="btnICloudShare" class="pill-btn primary" onclick="saveToICloudDrive()">☁️ Salva su iCloud</button>
+      <button class="pill-btn" onclick="document.getElementById('importFileTop').click()">📂 Apri</button>
+      <button id="btnSyncConnect" class="pill-btn" onclick="connectSyncFile()">🔗 Auto-Sync</button>
+      <button id="btnSyncReload" class="pill-btn hidden" onclick="reloadFromFile()">🔄 Ricarica</button>
+      <button id="btnSyncDisconnect" class="pill-btn hidden" onclick="disconnectSyncFile()">✕</button>
+      <input type="file" id="importFileTop" accept=".json,application/json" class="hidden" onchange="importData(event)">
+    </div>
+  </div>
 
-  <!-- BANNER INSTALLAZIONE SU IPHONE / MAC -->
+  <!-- BANNER INSTALLAZIONE -->
   <div id="installBanner" class="install-banner hidden">
     <div>
-      📲 <strong>Installa come App su iPhone / Mac:</strong> su Safari tocca <strong>Condividi (⬆️)</strong> → <strong>"Aggiungi alla schermata Home"</strong> per usarla a tutto schermo con notifiche e salvataggio permanente!
+      📲 <strong>Installa su iPhone:</strong> tocca <strong>Condividi (⬆️)</strong> → <strong>"Aggiungi alla schermata Home"</strong> per usarla a tutto schermo!
     </div>
-    <button class="btn btn-secondary btn-small" onclick="dismissInstallBanner()">Ho capito</button>
+    <button class="btn btn-secondary btn-small" onclick="dismissInstallBanner()">OK</button>
   </div>
 
-  <div id="storageWarn" class="storage-warn hidden"></div>
-
-  <!-- BARRA SINCRONIZZAZIONE & ICLOUD DRIVE -->
-  <div class="sync-bar">
-    <span id="syncStatus" class="sync-status">☁️ <strong>Salvato sul dispositivo</strong> — usa Salva su iCloud Drive per condividere o fare backup</span>
-    <button id="btnICloudShare" class="btn btn-primary btn-small" onclick="saveToICloudDrive()">☁️ Salva su iCloud Drive</button>
-    <button id="btnSyncConnect" class="btn btn-secondary btn-small" onclick="connectSyncFile()">🔗 Collega file automatico</button>
-    <button id="btnSyncReload" class="btn btn-secondary btn-small hidden" onclick="reloadFromFile()">🔄 Ricarica</button>
-    <button id="btnSyncDisconnect" class="btn btn-secondary btn-small hidden" onclick="disconnectSyncFile()">✕ Scollega</button>
-    <button class="btn btn-secondary btn-small" onclick="document.getElementById('importFileTop').click()">📂 Apri da iCloud / File</button>
-    <input type="file" id="importFileTop" accept=".json,application/json" class="hidden" onchange="importData(event)">
-  </div>
-
-  <!-- BALANCE CARD -->
+  <!-- HERO BALANCE CARD -->
   <div class="balance-card">
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-      <div class="balance-label">Saldo attuale <span style="font-size:11px; text-transform:none; opacity:0.8;">(tocca per impostare)</span></div>
-      <button class="btn btn-secondary btn-small" onclick="editCurrentBalancePrompt()">✏️ Imposta saldo attuale</button>
+    <div class="balance-top">
+      <div>
+        <div class="balance-label">Saldo attuale</div>
+        <div id="balanceAmount" class="balance-amount" onclick="editCurrentBalancePrompt()" title="Tocca per impostare il saldo attuale">€ 0,00</div>
+      </div>
+      <button class="balance-edit-badge" onclick="editCurrentBalancePrompt()">✏️ Imposta saldo</button>
     </div>
-    <div id="balanceAmount" class="balance-amount" style="cursor:pointer;" onclick="editCurrentBalancePrompt()" title="Tocca per modificare il saldo attuale">€ 0,00</div>
+
     <div class="stats-row">
       <div class="stat">
-        <div class="stat-label">Entrate del mese</div>
+        <div class="stat-label">Entrate mese</div>
         <div id="statIncome" class="stat-value amount-pos">€ 0,00</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Uscite del mese</div>
+        <div class="stat-label">Uscite mese</div>
         <div id="statExpense" class="stat-value amount-neg">€ 0,00</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Bilancio del mese</div>
+        <div class="stat-label">Bilancio mese</div>
         <div id="statNet" class="stat-value">€ 0,00</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Ricorrenti mensili (stima)</div>
+        <div class="stat-label">Fisse mensili</div>
         <div id="statRecurring" class="stat-value amount-neg">€ 0,00</div>
       </div>
     </div>
@@ -351,10 +526,13 @@
     <!-- BUDGET CONSIGLIATO -->
     <div id="budgetCard" class="budget-card">
       <div class="budget-head">
-        <span class="budget-title">💡 Puoi spendere fino a fine mese</span>
+        <span class="budget-title">💡 Spendibile fino a fine mese</span>
         <span id="budgetDaysLeft" class="budget-title"></span>
       </div>
       <div id="budgetMain" class="budget-amount pos">€ 0,00</div>
+      <div class="budget-progress-track">
+        <div id="budgetProgressBar" class="budget-progress-fill" style="width: 100%"></div>
+      </div>
       <div id="budgetMessage" class="budget-sub"></div>
       <div class="budget-grid">
         <div class="budget-cell">
@@ -362,11 +540,11 @@
           <div id="budgetDaily" class="budget-cell-value">—</div>
         </div>
         <div class="budget-cell">
-          <div class="budget-cell-label">Alla settimana</div>
+          <div class="budget-cell-label">A settimana</div>
           <div id="budgetWeekly" class="budget-cell-value">—</div>
         </div>
         <div class="budget-cell">
-          <div class="budget-cell-label">Spese fisse residue</div>
+          <div class="budget-cell-label">Fisse residue</div>
           <div id="budgetUpcoming" class="budget-cell-value">—</div>
         </div>
         <div class="budget-cell editable" onclick="editBudgetField('saldoIniziale', event)">
@@ -374,77 +552,96 @@
           <div id="budgetInitial" class="budget-cell-value">—</div>
         </div>
         <div class="budget-cell editable" onclick="editBudgetField('risparmio', event)">
-          <div class="budget-cell-label">Risparmio mensile <span class="budget-cell-edit-icon">✏️</span></div>
+          <div class="budget-cell-label">Risparmio <span class="budget-cell-edit-icon">✏️</span></div>
           <div id="budgetSaving" class="budget-cell-value">—</div>
         </div>
         <div class="budget-cell editable" onclick="editBudgetField('soglia', event)">
-          <div class="budget-cell-label">Soglia minima <span class="budget-cell-edit-icon">✏️</span></div>
+          <div class="budget-cell-label">Soglia min. <span class="budget-cell-edit-icon">✏️</span></div>
           <div id="budgetThreshold" class="budget-cell-value">—</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- TABS -->
-  <div class="tabs">
-    <div class="tab active" data-tab="movimenti">Movimenti</div>
-    <div class="tab" data-tab="statistiche">Statistiche</div>
-    <div class="tab" data-tab="ricorrenti">Ricorrenti</div>
-    <div class="tab" data-tab="indefinite">Indefinite</div>
-    <div class="tab" data-tab="promemoria">🔔 Promemoria</div>
-    <div class="tab" data-tab="impostazioni">Impostazioni</div>
-  </div>
+  <!-- NAVIGATION BAR (Top on Desktop, Docked Bottom Bar on iPhone) -->
+  <nav class="tabs-nav">
+    <div class="tab active" data-tab="movimenti">
+      <span class="tab-icon">💳</span>
+      <span>Movimenti</span>
+    </div>
+    <div class="tab" data-tab="statistiche">
+      <span class="tab-icon">📊</span>
+      <span>Statistiche</span>
+    </div>
+    <div class="tab" data-tab="ricorrenti">
+      <span class="tab-icon">🔁</span>
+      <span>Ricorrenti</span>
+    </div>
+    <div class="tab" data-tab="indefinite">
+      <span class="tab-icon">♾️</span>
+      <span>Indefinite</span>
+    </div>
+    <div class="tab" data-tab="promemoria">
+      <span class="tab-icon">🔔</span>
+      <span>Scadenze</span>
+    </div>
+    <div class="tab" data-tab="impostazioni">
+      <span class="tab-icon">⚙️</span>
+      <span>Opzioni</span>
+    </div>
+  </nav>
 
   <!-- TAB: MOVIMENTI -->
   <div id="tab-movimenti" class="tab-content">
-    <div class="panel">
-      <h3 class="panel-title">Aggiungi movimento</h3>
+    <div class="panel" id="panelAddMovimento">
+      <h3 class="panel-title">Nuovo movimento</h3>
       <form id="formMovimento">
         <div>
           <label>Tipo</label>
-          <select name="tipo" required>
-            <option value="entrata">Entrata</option>
-            <option value="uscita" selected>Uscita</option>
-          </select>
-        </div>
-        <div>
-          <label>Data</label>
-          <input type="date" name="data" required>
+          <input type="hidden" name="tipo" value="uscita">
+          <div class="segmented-tipo">
+            <button type="button" class="seg-btn active-uscita" onclick="setFormTipo(this, 'uscita')">− Uscita</button>
+            <button type="button" class="seg-btn" onclick="setFormTipo(this, 'entrata')">+ Entrata</button>
+          </div>
         </div>
         <div>
           <label>Importo (€)</label>
-          <input type="number" name="importo" step="0.01" min="0" inputmode="decimal" required placeholder="0,00">
+          <input type="number" name="importo" id="movImportoInput" step="0.01" min="0" inputmode="decimal" required placeholder="0,00">
         </div>
         <div>
           <label>Categoria</label>
           <select name="categoria" data-cat-select required></select>
         </div>
-        <div class="form-full">
-          <label>Descrizione</label>
-          <input type="text" name="descrizione" placeholder="Descrizione del movimento">
+        <div>
+          <label>Data</label>
+          <input type="date" name="data" required>
         </div>
         <div class="form-full">
-          <button type="submit" class="btn btn-primary">Aggiungi movimento</button>
+          <label>Descrizione</label>
+          <input type="text" name="descrizione" placeholder="es. Spesa Esselunga, Cena fuori…">
+        </div>
+        <div class="form-full">
+          <button type="submit" class="btn btn-primary" style="width:100%">+ Aggiungi movimento</button>
         </div>
       </form>
     </div>
 
     <div class="panel">
-      <h3 class="panel-title">
+      <div class="panel-title">
         <span>Storico movimenti</span>
         <div class="month-nav">
           <button onclick="changeMonth(-1)">‹</button>
-          <span id="monthLabel">—</span>
+          <span id="monthLabel" style="font-size:14px; min-width:85px; text-align:center;">—</span>
           <button onclick="changeMonth(1)">›</button>
           <button onclick="setMonthAll()" class="btn-small">Tutti</button>
         </div>
-      </h3>
+      </div>
       <div class="toolbar">
-        <input type="text" id="searchInput" placeholder="Cerca…" oninput="renderMovimenti()">
+        <input type="text" id="searchInput" placeholder="🔍 Cerca descrizione o categoria…" oninput="renderMovimenti()">
         <select id="filterTipo" onchange="renderMovimenti()">
-          <option value="">Tutti i tipi</option>
-          <option value="entrata">Solo entrate</option>
-          <option value="uscita">Solo uscite</option>
+          <option value="">Tutti i movimenti</option>
+          <option value="entrata">Solo entrate (+)</option>
+          <option value="uscita">Solo uscite (−)</option>
         </select>
       </div>
       <div id="movimentiTable"></div>
@@ -454,18 +651,19 @@
   <!-- TAB: RICORRENTI -->
   <div id="tab-ricorrenti" class="tab-content hidden">
     <div class="panel">
-      <h3 class="panel-title">Aggiungi spesa ricorrente</h3>
+      <h3 class="panel-title">Nuova spesa o entrata ricorrente</h3>
       <form id="formRicorrente">
         <div>
           <label>Tipo</label>
-          <select name="tipo" required>
-            <option value="uscita" selected>Uscita</option>
-            <option value="entrata">Entrata</option>
-          </select>
+          <input type="hidden" name="tipo" value="uscita">
+          <div class="segmented-tipo">
+            <button type="button" class="seg-btn active-uscita" onclick="setFormTipo(this, 'uscita')">− Uscita</button>
+            <button type="button" class="seg-btn" onclick="setFormTipo(this, 'entrata')">+ Entrata</button>
+          </div>
         </div>
         <div>
           <label>Importo (€)</label>
-          <input type="number" name="importo" step="0.01" min="0" inputmode="decimal" required>
+          <input type="number" name="importo" step="0.01" min="0" inputmode="decimal" required placeholder="0,00">
         </div>
         <div>
           <label>Frequenza</label>
@@ -480,6 +678,10 @@
           </select>
         </div>
         <div>
+          <label>Categoria</label>
+          <select name="categoria" data-cat-select required></select>
+        </div>
+        <div>
           <label>Data inizio</label>
           <input type="date" name="dataInizio" required>
         </div>
@@ -487,29 +689,24 @@
           <label>Data fine (opzionale)</label>
           <input type="date" name="dataFine">
         </div>
-        <div>
-          <label>Categoria</label>
-          <select name="categoria" data-cat-select required></select>
-        </div>
         <div class="form-full">
           <label>Descrizione</label>
-          <input type="text" name="descrizione" required placeholder="es. Abbonamento Netflix">
+          <input type="text" name="descrizione" required placeholder="es. Abbonamento Netflix, Stipendio…">
         </div>
         <div class="form-full">
           <label class="checkbox-row">
             <input type="checkbox" name="promemoriaAttivo" checked>
-            <span>🔔 Invia promemoria prima della scadenza</span>
+            <span>🔔 Avvisami con un promemoria prima della scadenza</span>
           </label>
         </div>
         <div class="form-full">
-          <button type="submit" class="btn btn-primary">Aggiungi ricorrente</button>
+          <button type="submit" class="btn btn-primary" style="width:100%">+ Aggiungi ricorrente</button>
         </div>
       </form>
     </div>
 
     <div class="panel">
-      <h3 class="panel-title">Spese ricorrenti attive</h3>
-      <div class="subtitle" style="margin-bottom:12px;">Le rate vengono calcolate automaticamente fino alla data odierna (o alla data fine).</div>
+      <h3 class="panel-title">Spese ed entrate ricorrenti attive</h3>
       <div id="ricorrentiTable"></div>
     </div>
   </div>
@@ -517,19 +714,20 @@
   <!-- TAB: INDEFINITE -->
   <div id="tab-indefinite" class="tab-content hidden">
     <div class="panel">
-      <h3 class="panel-title">Aggiungi spesa a periodo indefinito</h3>
-      <div class="subtitle" style="margin-bottom:12px;">Spese senza data di fine certa: vengono conteggiate ogni mese fino a quando non le chiudi.</div>
+      <h3 class="panel-title">Nuova spesa a periodo indefinito</h3>
+      <div class="subtitle" style="margin-bottom:14px;">Conteggiata ogni mese fino a quando non decidi di chiuderla.</div>
       <form id="formIndefinita">
         <div>
           <label>Tipo</label>
-          <select name="tipo" required>
-            <option value="uscita" selected>Uscita</option>
-            <option value="entrata">Entrata</option>
-          </select>
+          <input type="hidden" name="tipo" value="uscita">
+          <div class="segmented-tipo">
+            <button type="button" class="seg-btn active-uscita" onclick="setFormTipo(this, 'uscita')">− Uscita</button>
+            <button type="button" class="seg-btn" onclick="setFormTipo(this, 'entrata')">+ Entrata</button>
+          </div>
         </div>
         <div>
           <label>Importo mensile (€)</label>
-          <input type="number" name="importo" step="0.01" min="0" inputmode="decimal" required>
+          <input type="number" name="importo" step="0.01" min="0" inputmode="decimal" required placeholder="0,00">
         </div>
         <div>
           <label>Data inizio</label>
@@ -541,7 +739,7 @@
         </div>
         <div class="form-full">
           <label>Descrizione</label>
-          <input type="text" name="descrizione" required>
+          <input type="text" name="descrizione" required placeholder="es. Affitto, Palestra…">
         </div>
         <div class="form-full">
           <label class="checkbox-row">
@@ -550,7 +748,7 @@
           </label>
         </div>
         <div class="form-full">
-          <button type="submit" class="btn btn-primary">Aggiungi spesa indefinita</button>
+          <button type="submit" class="btn btn-primary" style="width:100%">+ Aggiungi indefinita</button>
         </div>
       </form>
     </div>
@@ -564,16 +762,15 @@
   <!-- TAB: STATISTICHE -->
   <div id="tab-statistiche" class="tab-content hidden">
     <div class="panel">
-      <h3 class="panel-title">
+      <div class="panel-title">
         <span>Spese per categoria</span>
         <div class="month-nav">
           <button onclick="changeStatsMonth(-1)">‹</button>
-          <span id="statsMonthLabel">—</span>
+          <span id="statsMonthLabel" style="font-size:14px; min-width:85px; text-align:center;">—</span>
           <button onclick="changeStatsMonth(1)">›</button>
           <button onclick="setStatsMonthAll()" class="btn-small">Tutti</button>
         </div>
-      </h3>
-      <div class="subtitle" style="margin-bottom:12px;">Vedi dove vanno i tuoi soldi: ogni barra è proporzionale alla spesa totale del periodo.</div>
+      </div>
       <div id="statsExpense"></div>
     </div>
     <div class="panel">
@@ -585,20 +782,20 @@
   <!-- TAB: PROMEMORIA -->
   <div id="tab-promemoria" class="tab-content hidden">
     <div class="panel">
-      <h3 class="panel-title">🔔 Impostazioni Promemoria Scadenze</h3>
+      <h3 class="panel-title">🔔 Promemoria & Calendario iPhone</h3>
       <div class="subtitle" style="margin-bottom:14px;">
-        Ricevi avvisi per le tue spese ed entrate ricorrenti o a periodo indefinito, oppure esportale con 1 tocco nel <strong>Calendario / Promemoria di iPhone e Mac</strong> per ricevere gli avvisi nativi di iOS anche ad app chiusa.
+        Attiva le notifiche dell'app oppure aggiungi con 1 tocco le scadenze al <strong>Calendario di iPhone e Mac</strong> per ricevere gli avvisi nativi di iOS anche a schermo bloccato.
       </div>
 
       <div class="actions-row" style="margin-bottom:16px;">
-        <button class="btn btn-primary btn-small" onclick="requestWebNotifications()">🔔 Attiva Notifiche App</button>
-        <button class="btn btn-secondary btn-small" onclick="sendTestNotification()">📣 Prova Notifica</button>
-        <button class="btn btn-success btn-small" onclick="exportCalendarICS()">📅 Aggiungi Scadenze al Calendario iPhone (.ics)</button>
+        <button class="btn btn-primary btn-small" onclick="requestWebNotifications()">🔔 Attiva Notifiche</button>
+        <button class="btn btn-secondary btn-small" onclick="sendTestNotification()">📣 Test</button>
+        <button class="btn btn-success btn-small" onclick="exportCalendarICS()">📅 Esporta nel Calendario iPhone (.ics)</button>
       </div>
 
       <form id="formPromemoria">
         <div>
-          <label>Quando avvisare in anticipo</label>
+          <label>Preavviso scadenza</label>
           <select id="remGiorniPrima">
             <option value="0">Solo il giorno stesso</option>
             <option value="1" selected>1 giorno prima</option>
@@ -614,7 +811,7 @@
         <div class="form-full">
           <label class="checkbox-row">
             <input type="checkbox" id="remAbilitati" checked>
-            <span>Abilita promemoria automatici per le scadenze</span>
+            <span>Abilita promemoria automatici</span>
           </label>
           <label class="checkbox-row">
             <input type="checkbox" id="remAncheGiorno" checked>
@@ -622,14 +819,13 @@
           </label>
         </div>
         <div class="form-full">
-          <button type="submit" class="btn btn-primary">Salva impostazioni promemoria</button>
+          <button type="submit" class="btn btn-primary" style="width:100%">Salva impostazioni promemoria</button>
         </div>
       </form>
     </div>
 
     <div class="panel">
-      <h3 class="panel-title">📅 Prossime scadenze (prossimi 60 giorni)</h3>
-      <div class="subtitle" style="margin-bottom:12px;">Elenco calcolato automaticamente dalle tue spese ricorrenti e indefinite con promemoria attivo.</div>
+      <h3 class="panel-title">📅 Prossime scadenze (60 giorni)</h3>
       <div id="upcomingTable"></div>
     </div>
   </div>
@@ -637,25 +833,12 @@
   <!-- TAB: IMPOSTAZIONI -->
   <div id="tab-impostazioni" class="tab-content hidden">
     <div class="panel">
-      <h3 class="panel-title">Saldo iniziale</h3>
-      <div class="subtitle" style="margin-bottom:12px;">Il saldo iniziale rappresenta il punto di partenza prima dei movimenti registrati.</div>
-      <form id="formSaldoIniziale" style="grid-template-columns: 1fr auto;">
+      <h3 class="panel-title">Saldo iniziale e Obiettivi Budget</h3>
+      <form id="formBudget">
         <div>
           <label>Saldo iniziale (€)</label>
-          <input type="number" name="saldo" step="0.01" inputmode="decimal" id="saldoInizialeInput">
+          <input type="number" name="saldoIniziale" step="0.01" inputmode="decimal" id="saldoInizialeInput">
         </div>
-        <div style="display:flex; align-items:flex-end;">
-          <button type="submit" class="btn btn-primary">Salva</button>
-        </div>
-      </form>
-    </div>
-
-    <div class="panel">
-      <h3 class="panel-title">💡 Budget consigliato</h3>
-      <div class="subtitle" style="margin-bottom:12px;">
-        Imposta i tuoi obiettivi: il suggerimento "puoi spendere" si calcola sottraendo dal saldo le spese ricorrenti e indefinite ancora da pagare entro fine mese, l'obiettivo di risparmio e la soglia minima che vuoi mantenere.
-      </div>
-      <form id="formBudget">
         <div>
           <label>Risparmio mensile desiderato (€)</label>
           <input type="number" name="risparmio" step="0.01" min="0" inputmode="decimal" id="risparmioInput" placeholder="0,00">
@@ -665,26 +848,25 @@
           <input type="number" name="soglia" step="0.01" min="0" inputmode="decimal" id="sogliaInput" placeholder="0,00">
         </div>
         <div class="form-full">
-          <button type="submit" class="btn btn-primary">Salva budget</button>
+          <button type="submit" class="btn btn-primary" style="width:100%">Salva parametri</button>
         </div>
       </form>
     </div>
 
     <div class="panel">
-      <h3 class="panel-title">🔍 Verifica saldo</h3>
-      <div class="subtitle" style="margin-bottom:12px;">Dettaglio dei calcoli per verificare che i conti tornino.</div>
+      <h3 class="panel-title">🔍 Verifica dettagliata saldo</h3>
       <div id="diagnostica" style="font-size:14px; line-height:1.8;"></div>
     </div>
 
     <div class="panel">
-      <h3 class="panel-title">☁️ iCloud Drive & Backup dati</h3>
-      <div class="subtitle" style="margin-bottom:12px;">
-        Su iPhone e iPad premi <strong>"Salva su iCloud Drive"</strong> e scegli <em>"Salva su File → iCloud Drive"</em>. Per caricare un file da iCloud Drive premi <strong>"Apri da iCloud / File"</strong>.
+      <h3 class="panel-title">☁️ Sincronizzazione iCloud Drive & Backup</h3>
+      <div class="subtitle" style="margin-bottom:14px;">
+        Salva o carica il tuo file <code>saldo-dati.json</code> su <strong>iCloud Drive</strong> per avere gli stessi dati su iPhone, iPad e Mac.
       </div>
       <div class="actions-row">
         <button class="btn btn-primary" onclick="saveToICloudDrive()">☁️ Salva su iCloud Drive</button>
-        <button class="btn btn-success" onclick="exportData()">📥 Scarica Backup JSON</button>
         <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Apri da iCloud / File</button>
+        <button class="btn btn-success" onclick="exportData()">📥 Scarica JSON</button>
         <input type="file" id="importFile" accept=".json,application/json" class="hidden" onchange="importData(event)">
         <button class="btn btn-danger" onclick="resetData()">🗑 Cancella tutto</button>
       </div>
@@ -692,10 +874,10 @@
   </div>
 </div>
 
+<!-- FLOATING QUICK-ADD BUTTON ON MOBILE -->
+<button class="fab-add" onclick="quickJumpToAdd()" title="Aggiungi movimento">+</button>
+
 <script>
-// =====================
-// SERVICE WORKER + INSTALL BANNER
-// =====================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -706,18 +888,38 @@ function checkInstallBanner() {
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   const dismissed = localStorage.getItem('saldo_install_dismissed') === '1';
   const banner = document.getElementById('installBanner');
-  if (!isStandalone && !dismissed && banner) {
-    banner.classList.remove('hidden');
-  }
+  if (!isStandalone && !dismissed && banner) banner.classList.remove('hidden');
 }
 function dismissInstallBanner() {
   localStorage.setItem('saldo_install_dismissed', '1');
   document.getElementById('installBanner').classList.add('hidden');
 }
 
-// =====================
-// TOAST + STORAGE CHECK
-// =====================
+function quickJumpToAdd() {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+  document.querySelector('.tab[data-tab="movimenti"]').classList.add('active');
+  document.getElementById('tab-movimenti').classList.remove('hidden');
+  const panel = document.getElementById('panelAddMovimento');
+  if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  setTimeout(() => {
+    const inp = document.getElementById('movImportoInput');
+    if (inp) inp.focus();
+  }, 350);
+}
+
+function setFormTipo(btn, tipoVal) {
+  const seg = btn.closest('.segmented-tipo');
+  const form = btn.closest('form');
+  const hidden = form.querySelector('input[name="tipo"]');
+  hidden.value = tipoVal;
+  seg.querySelectorAll('.seg-btn').forEach(b => {
+    b.classList.remove('active-uscita', 'active-entrata');
+  });
+  btn.classList.add(tipoVal === 'uscita' ? 'active-uscita' : 'active-entrata');
+  populateCategorySelects();
+}
+
 let toastEl = null;
 function showToast(msg, isError) {
   if (!toastEl) {
@@ -737,25 +939,12 @@ function checkStorage() {
   try {
     const probe = '__saldo_probe__';
     localStorage.setItem(probe, probe);
-    if (localStorage.getItem(probe) !== probe) throw new Error('readback failed');
     localStorage.removeItem(probe);
     storageOK = true;
-    if (navigator.storage && navigator.storage.persist) {
-      navigator.storage.persist().catch(() => {});
-    }
-  } catch (e) {
-    storageOK = false;
-    const w = document.getElementById('storageWarn');
-    if (w) {
-      w.classList.remove('hidden');
-      w.innerHTML = '⚠️ <strong>Salvataggio nel browser non disponibile</strong> in questa pagina. Usa <strong>Salva su iCloud Drive</strong>.';
-    }
-  }
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  } catch (e) { storageOK = false; }
 }
 
-// =====================
-// ICLOUD DRIVE (Web Share API + File System Access API + IndexedDB backup)
-// =====================
 const FSA_SUPPORTED = typeof window.showSaveFilePicker === 'function' && typeof window.showOpenFilePicker === 'function';
 let fileHandle = null;
 let writingToFile = false;
@@ -816,7 +1005,6 @@ async function idbClearHandle() {
   });
 }
 
-// Salva su iCloud Drive usando il menu Condividi nativo di iOS/macOS ("Salva su File -> iCloud Drive")
 async function saveToICloudDrive() {
   const payload = { _format: 'saldo-sync-v1', updatedAt: new Date().toISOString(), data: state };
   const jsonStr = JSON.stringify(payload, null, 2);
@@ -835,7 +1023,6 @@ async function saveToICloudDrive() {
   } catch (e) {
     if (e && e.name === 'AbortError') return;
   }
-  // Fallback download diretto
   exportData();
 }
 
@@ -855,11 +1042,7 @@ async function writeToFileHandle() {
     const payload = { _format: 'saldo-sync-v1', updatedAt: new Date().toISOString(), data: state };
     await w.write(JSON.stringify(payload, null, 2));
     await w.close();
-  } catch (e) {
-    console.error('Scrittura file fallita:', e);
-  } finally {
-    writingToFile = false;
-  }
+  } catch (e) {} finally { writingToFile = false; }
 }
 
 async function readFromFileHandle() {
@@ -876,10 +1059,7 @@ async function readFromFileHandle() {
 }
 
 async function connectSyncFile() {
-  if (!FSA_SUPPORTED) {
-    saveToICloudDrive();
-    return;
-  }
+  if (!FSA_SUPPORTED) { saveToICloudDrive(); return; }
   try {
     const handle = await window.showSaveFilePicker({
       suggestedName: 'saldo-dati.json',
@@ -889,7 +1069,7 @@ async function connectSyncFile() {
     await idbSetHandle(handle);
     const existing = await readFromFileHandle();
     if (existing && (existing.movimenti || existing.ricorrenti)) {
-      if (confirm('Il file selezionato contiene già dati. Vuoi caricarli al posto di quelli attuali?')) {
+      if (confirm('Il file selezionato contiene già dati. Vuoi caricarli?')) {
         state = Object.assign(emptyState(), existing);
         state.budget = Object.assign(emptyState().budget, existing.budget || {});
         state.promemoria = Object.assign(emptyState().promemoria, existing.promemoria || {});
@@ -916,7 +1096,6 @@ async function reloadFromFile() {
   if (!fileHandle) return;
   const data = await readFromFileHandle();
   if (!data) { showToast('Lettura fallita', true); return; }
-  if (!confirm('Sostituire i dati attuali con quelli del file?')) return;
   state = Object.assign(emptyState(), data);
   state.budget = Object.assign(emptyState().budget, data.budget || {});
   state.promemoria = Object.assign(emptyState().promemoria, data.promemoria || {});
@@ -931,42 +1110,27 @@ function renderSyncStatus() {
   const btnRel = document.getElementById('btnSyncReload');
   const btnDis = document.getElementById('btnSyncDisconnect');
   if (fileHandle) {
-    el.classList.add('connected'); el.classList.remove('warning');
-    el.innerHTML = `✅ Sincronizzato con <strong>${escapeHtml(fileHandle.name || 'file')}</strong> su iCloud / disco`;
+    el.innerHTML = `✅ Sincronizzato con <strong>${escapeHtml(fileHandle.name || 'file')}</strong>`;
     btnConn.classList.add('hidden');
     btnRel.classList.remove('hidden');
     btnDis.classList.remove('hidden');
   } else {
-    el.classList.remove('connected', 'warning');
-    el.innerHTML = `☁️ <strong>Salvato sul dispositivo</strong> — usa <strong>Salva su iCloud Drive</strong> per salvare o condividere il file`;
+    el.innerHTML = `☁️ Salvato sul dispositivo · Pronto per iCloud`;
     btnConn.classList.toggle('hidden', !FSA_SUPPORTED);
     btnRel.classList.add('hidden');
     btnDis.classList.add('hidden');
   }
 }
 
-// =====================
-// STATE
-// =====================
 const STORAGE_KEY = 'saldo_movimenti_v1';
-
 function emptyState() {
   return {
     saldoIniziale: 0,
     movimenti: [],
     ricorrenti: [],
     indefinite: [],
-    budget: {
-      risparmioMensile: 0,
-      sogliaMinima: 0
-    },
-    promemoria: {
-      abilitati: true,
-      giorniPrima: 1,
-      ancheGiornoScadenza: true,
-      oraNotifica: 9,
-      minutoNotifica: 0
-    }
+    budget: { risparmioMensile: 0, sogliaMinima: 0 },
+    promemoria: { abilitati: true, giorniPrima: 1, ancheGiornoScadenza: true, oraNotifica: 9, minutoNotifica: 0 }
   };
 }
 
@@ -989,7 +1153,7 @@ async function loadState() {
         state.promemoria = Object.assign(emptyState().promemoria, backup.promemoria || {});
       }
     }
-  } catch (e) { console.error(e); }
+  } catch (e) {}
   migrateCategories();
 }
 
@@ -1040,36 +1204,33 @@ function saveState(opts) {
   idbSaveStateBackup(state);
   if (fileHandle) writeToFileHandle();
   if (!(opts && opts.silent)) {
-    if (saved || fileHandle) showToast(fileHandle ? 'Salvato + sincronizzato ✓' : 'Salvato ✓');
+    if (saved || fileHandle) showToast(fileHandle ? 'Salvato su iCloud ✓' : 'Salvato ✓');
     else showToast('Impossibile salvare', true);
   }
   renderAll();
 }
 
-// =====================
-// CATEGORIE
-// =====================
 const CATEGORIES = [
-  { id: 'spesa',       name: 'Spesa alimentare', icon: '🛒', color: '#22c55e', kind: 'uscita' },
+  { id: 'spesa',       name: 'Spesa alimentare', icon: '🛒', color: '#10b981', kind: 'uscita' },
   { id: 'ristoranti',  name: 'Ristoranti e bar', icon: '🍽️', color: '#f97316', kind: 'uscita' },
   { id: 'trasporti',   name: 'Trasporti',        icon: '🚗', color: '#3b82f6', kind: 'uscita' },
   { id: 'carburante',  name: 'Carburante',       icon: '⛽', color: '#0ea5e9', kind: 'uscita' },
   { id: 'casa',        name: 'Casa / Affitto',   icon: '🏠', color: '#8b5cf6', kind: 'uscita' },
   { id: 'bollette',    name: 'Bollette',         icon: '💡', color: '#eab308', kind: 'uscita' },
   { id: 'abbonamenti', name: 'Abbonamenti',      icon: '📱', color: '#06b6d4', kind: 'uscita' },
-  { id: 'salute',      name: 'Salute',           icon: '🩺', color: '#ef4444', kind: 'uscita' },
+  { id: 'salute',      name: 'Salute',           icon: '🩺', color: '#f43f5e', kind: 'uscita' },
   { id: 'abbigliamento', name: 'Abbigliamento',  icon: '👕', color: '#ec4899', kind: 'uscita' },
   { id: 'tempolibero', name: 'Tempo libero',     icon: '🎉', color: '#a855f7', kind: 'uscita' },
   { id: 'viaggi',      name: 'Viaggi',           icon: '✈️', color: '#14b8a6', kind: 'uscita' },
-  { id: 'regali',      name: 'Regali',           icon: '🎁', color: '#f43f5e', kind: 'uscita' },
+  { id: 'regali',      name: 'Regali',           icon: '🎁', color: '#fb7185', kind: 'uscita' },
   { id: 'istruzione',  name: 'Istruzione',       icon: '📚', color: '#6366f1', kind: 'uscita' },
   { id: 'tecnologia',  name: 'Tecnologia',       icon: '💻', color: '#64748b', kind: 'uscita' },
   { id: 'sport',       name: 'Sport e benessere', icon: '🏋️', color: '#84cc16', kind: 'uscita' },
   { id: 'animali',     name: 'Animali',          icon: '🐾', color: '#d97706', kind: 'uscita' },
   { id: 'tasse',       name: 'Tasse e finanze',  icon: '💼', color: '#475569', kind: 'uscita' },
   { id: 'altro_u',     name: 'Altre spese',      icon: '📦', color: '#94a3b8', kind: 'uscita' },
-  { id: 'stipendio',   name: 'Stipendio',        icon: '💰', color: '#22c55e', kind: 'entrata' },
-  { id: 'bonus',       name: 'Bonus / Premi',    icon: '🎯', color: '#10b981', kind: 'entrata' },
+  { id: 'stipendio',   name: 'Stipendio',        icon: '💰', color: '#10b981', kind: 'entrata' },
+  { id: 'bonus',       name: 'Bonus / Premi',    icon: '🎯', color: '#34d399', kind: 'entrata' },
   { id: 'rimborso',    name: 'Rimborsi',         icon: '↩️', color: '#06b6d4', kind: 'entrata' },
   { id: 'investimenti', name: 'Investimenti',    icon: '📈', color: '#3b82f6', kind: 'entrata' },
   { id: 'regalo_in',   name: 'Regali ricevuti',  icon: '🎁', color: '#ec4899', kind: 'entrata' },
@@ -1080,16 +1241,12 @@ const CAT_BY_ID = Object.fromEntries(CATEGORIES.map(c => [c.id, c]));
 function getCategory(id) {
   return CAT_BY_ID[id] || { id: id || 'sconosciuta', name: id || 'Senza categoria', icon: '❔', color: '#64748b', kind: 'uscita' };
 }
-function catLabel(id) {
-  const c = getCategory(id);
-  return `<span class="cat-icon"><span class="cat-emoji">${c.icon}</span><span>${escapeHtml(c.name)}</span></span>`;
-}
 
 function populateCategorySelects() {
   document.querySelectorAll('select[data-cat-select]').forEach(sel => {
     const form = sel.closest('form');
-    const tipoSel = form ? form.querySelector('select[name="tipo"]') : null;
-    const tipo = tipoSel ? tipoSel.value : 'uscita';
+    const tipoInp = form ? form.querySelector('[name="tipo"]') : null;
+    const tipo = tipoInp ? tipoInp.value : 'uscita';
     const current = sel.value;
     const opts = CATEGORIES.filter(c => c.kind === tipo);
     sel.innerHTML = opts.map(c => `<option value="${c.id}">${c.icon}  ${c.name}</option>`).join('');
@@ -1097,9 +1254,6 @@ function populateCategorySelects() {
   });
 }
 
-// =====================
-// HELPERS
-// =====================
 const fmt = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n || 0);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const todayISO = () => {
@@ -1132,7 +1286,7 @@ function expandRicorrente(r, untilDate) {
       data: ymd(d),
       importo: r.importo,
       categoria: r.categoria || '',
-      descrizione: r.descrizione + ' (ricorrente)',
+      descrizione: r.descrizione,
       _TitleRaw: r.descrizione,
       _source: 'ricorrente',
       _refId: r.id
@@ -1165,7 +1319,7 @@ function expandIndefinita(i, untilDate) {
       data: ymd(d),
       importo: i.importo,
       categoria: i.categoria || '',
-      descrizione: i.descrizione + ' (indefinita)',
+      descrizione: i.descrizione,
       _TitleRaw: i.descrizione,
       _source: 'indefinita',
       _refId: i.id
@@ -1212,13 +1366,8 @@ function calcRecurringMonthly() {
     if (r.dataInizio > today) return;
     const sign = r.tipo === 'entrata' ? 1 : -1;
     const factor = {
-      giornaliera: 30,
-      settimanale: 4.33,
-      mensile: 1,
-      bimestrale: 0.5,
-      trimestrale: 1/3,
-      semestrale: 1/6,
-      annuale: 1/12
+      giornaliera: 30, settimanale: 4.33, mensile: 1,
+      bimestrale: 0.5, trimestrale: 1/3, semestrale: 1/6, annuale: 1/12
     }[r.frequenza] || 1;
     total += sign * Number(r.importo) * factor;
   });
@@ -1230,9 +1379,6 @@ function calcRecurringMonthly() {
   return total;
 }
 
-// =====================
-// PROMEMORIA & NOTIFICHE + ESPORTAZIONE CALENDARIO (.ICS)
-// =====================
 function calcUpcomingDeadlines(daysAhead = 60) {
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -1243,21 +1389,15 @@ function calcUpcomingDeadlines(daysAhead = 60) {
 
   state.ricorrenti.forEach(r => {
     if (r.promemoriaAttivo === false) return;
-    const occs = expandRicorrente(r, horizon);
-    occs.forEach(o => {
-      if (o.data >= todayStr && o.data <= horizonStr) {
-        list.push(o);
-      }
+    expandRicorrente(r, horizon).forEach(o => {
+      if (o.data >= todayStr && o.data <= horizonStr) list.push(o);
     });
   });
 
   state.indefinite.forEach(i => {
     if (i.attiva === false || i.promemoriaAttivo === false) return;
-    const occs = expandIndefinita(i, horizon);
-    occs.forEach(o => {
-      if (o.data >= todayStr && o.data <= horizonStr) {
-        list.push(o);
-      }
+    expandIndefinita(i, horizon).forEach(o => {
+      if (o.data >= todayStr && o.data <= horizonStr) list.push(o);
     });
   });
 
@@ -1266,7 +1406,7 @@ function calcUpcomingDeadlines(daysAhead = 60) {
 
 async function requestWebNotifications() {
   if (!('Notification' in window)) {
-    alert('Su iPhone, aggiungi prima questa pagina alla Schermata Home (Condividi -> Aggiungi alla schermata Home) per abilitare le notifiche web, oppure usa "Aggiungi Scadenze al Calendario iPhone (.ics)".');
+    alert('Su iPhone, installa prima questa pagina sulla Schermata Home (Condividi -> Aggiungi alla schermata Home) oppure usa "Esporta nel Calendario iPhone (.ics)".');
     return;
   }
   const perm = await Notification.requestPermission();
@@ -1274,7 +1414,7 @@ async function requestWebNotifications() {
     showToast('Notifiche attivate ✓');
     checkAndTriggerDueNotifications();
   } else {
-    showToast('Permesso notifiche non concesso', true);
+    showToast('Permesso non concesso', true);
   }
 }
 
@@ -1333,11 +1473,8 @@ function exportCalendarICS() {
   const daysAdv = Number(p.giorniPrima ?? 1);
 
   const lines = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Saldo e Movimenti//IT',
-    'CALSCALE:GREGORIAN',
-    'X-WR-CALNAME:Scadenze Saldo e Movimenti'
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Saldo e Movimenti//IT',
+    'CALSCALE:GREGORIAN', 'X-WR-CALNAME:Scadenze Saldo e Movimenti'
   ];
 
   upcoming.forEach(item => {
@@ -1384,31 +1521,31 @@ function renderPromemoria() {
     return;
   }
   const todayStr = todayISO();
-  container.innerHTML = `
-    <div class="table-wrap"><table>
-      <thead>
-        <tr><th>Scadenza</th><th>Descrizione</th><th>Categoria</th><th>Tipo</th><th style="text-align:right">Importo</th></tr>
-      </thead>
-      <tbody>
-        ${upcoming.map(u => `
-          <tr>
-            <td><strong>${formatDate(u.data)}</strong> ${u.data === todayStr ? '<span class="badge badge-indefinite">OGGI</span>' : ''}</td>
-            <td>${escapeHtml(u._TitleRaw)}</td>
-            <td>${catLabel(u.categoria)}</td>
-            <td>${badgeFor(u._source)}</td>
-            <td style="text-align:right" class="${u.tipo === 'entrata' ? 'amount-pos' : 'amount-neg'}">
-              ${u.tipo === 'entrata' ? '+' : '−'} ${fmt(Number(u.importo))}
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table></div>
-  `;
+  container.innerHTML = `<div class="tx-list">${upcoming.map(u => {
+    const c = getCategory(u.categoria);
+    const isToday = u.data === todayStr;
+    return `
+      <div class="tx-item">
+        <div class="tx-avatar" style="background:${c.color}22; border:1px solid ${c.color}55">${c.icon}</div>
+        <div class="tx-main">
+          <div class="tx-title">${escapeHtml(u._TitleRaw)}</div>
+          <div class="tx-meta">
+            <strong style="color:${isToday ? 'var(--yellow)' : 'var(--accent)'}">${formatDate(u.data)}</strong>
+            ${isToday ? '<span class="badge badge-indefinite">OGGI</span>' : ''}
+            <span>· ${escapeHtml(c.name)}</span>
+            ${badgeFor(u._source)}
+          </div>
+        </div>
+        <div class="tx-right">
+          <div class="tx-amount ${u.tipo === 'entrata' ? 'amount-pos' : 'amount-neg'}">
+            ${u.tipo === 'entrata' ? '+' : '−'} ${fmt(Number(u.importo))}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('')}</div>`;
 }
 
-// =====================
-// RENDER
-// =====================
 function calcBudgetSuggerito() {
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -1422,8 +1559,7 @@ function calcBudgetSuggerito() {
   const endYmd = ymd(endOfMonth);
   state.ricorrenti.forEach(r => {
     if (r.dataInizio > endYmd) return;
-    const occorrenze = expandRicorrente(r, endOfMonth);
-    occorrenze.forEach(o => {
+    expandRicorrente(r, endOfMonth).forEach(o => {
       if (o.data > todayYmd && o.data <= endYmd) {
         upcoming += (r.tipo === 'entrata' ? -1 : 1) * Number(r.importo);
       }
@@ -1431,11 +1567,9 @@ function calcBudgetSuggerito() {
   });
 
   state.indefinite.forEach(i => {
-    if (i.attiva === false) return;
-    if (i.dataInizio > endYmd) return;
+    if (i.attiva === false || i.dataInizio > endYmd) return;
     const startDay = parseDate(i.dataInizio).getDate();
-    const lastDayOfMonth = endOfMonth.getDate();
-    const dueDay = Math.min(startDay, lastDayOfMonth);
+    const dueDay = Math.min(startDay, endOfMonth.getDate());
     const dueDate = new Date(today.getFullYear(), today.getMonth(), dueDay);
     if (ymd(dueDate) > todayYmd) {
       upcoming += (i.tipo === 'entrata' ? -1 : 1) * Number(i.importo);
@@ -1453,7 +1587,7 @@ function editCurrentBalancePrompt() {
   const currentSaldo = calcSaldo();
   const netMovimenti = currentSaldo - (state.saldoIniziale || 0);
   const raw = prompt(
-    'Inserisci il tuo Saldo Attuale reale (€):\n(Il saldo iniziale verrà ricalcolato automaticamente in base ai movimenti già registrati)',
+    'Imposta il tuo Saldo Attuale reale (€):\n(Il saldo iniziale verrà calibrato automaticamente)',
     currentSaldo.toFixed(2)
   );
   if (raw === null) return;
@@ -1525,12 +1659,16 @@ function renderBudget() {
   const initEl = document.getElementById('budgetInitial');
   const sav = document.getElementById('budgetSaving');
   const thr = document.getElementById('budgetThreshold');
+  const bar = document.getElementById('budgetProgressBar');
 
   days.textContent = `${b.daysLeft} ${b.daysLeft === 1 ? 'giorno' : 'giorni'} a fine mese`;
   upc.textContent = fmt(b.upcoming);
   if (initEl) initEl.textContent = fmt(state.saldoIniziale || 0);
   sav.textContent = fmt(b.risparmio);
   thr.textContent = fmt(b.soglia);
+
+  const pct = b.saldo > 0 ? Math.max(0, Math.min(100, (b.spendibile / b.saldo) * 100)) : (b.spendibile > 0 ? 100 : 0);
+  if (bar) bar.style.width = `${pct}%`;
 
   if (b.spendibile >= 0) {
     main.textContent = fmt(b.spendibile);
@@ -1541,11 +1679,11 @@ function renderBudget() {
     card.className = 'budget-card';
     if (b.spendibile < (b.upcoming + b.risparmio) * 0.2 && b.spendibile > 0) {
       card.className = 'budget-card warn';
-      msg.textContent = `⚠️ Margine ridotto. Ti consigliamo di non superare ${fmt(perDay)} al giorno.`;
+      msg.textContent = `⚠️ Margine ridotto: consigliato max ${fmt(perDay)} al giorno.`;
     } else if (b.spendibile === 0) {
-      msg.textContent = `Sei in pareggio: niente spese extra fino a fine mese.`;
+      msg.textContent = `Sei in pareggio con gli obiettivi impostati.`;
     } else {
-      msg.textContent = `Puoi permetterti circa ${fmt(perDay)} al giorno (${fmt(perDay*7)} a settimana) per spese non fisse, mantenendo il tuo obiettivo di risparmio e la soglia di sicurezza.`;
+      msg.textContent = `Puoi spendere circa ${fmt(perDay)}/giorno (${fmt(perDay*7)}/settimana) mantenendo risparmio e soglia minima.`;
     }
   } else {
     main.textContent = fmt(b.spendibile);
@@ -1553,7 +1691,7 @@ function renderBudget() {
     daily.textContent = fmt(0);
     weekly.textContent = fmt(0);
     card.className = 'budget-card danger';
-    msg.textContent = `🚨 Sforamento previsto di ${fmt(Math.abs(b.spendibile))} entro fine mese. Riduci le spese non essenziali, rivedi l'obiettivo di risparmio o la soglia minima.`;
+    msg.textContent = `🚨 Sforamento previsto di ${fmt(Math.abs(b.spendibile))} rispetto a spese fisse, risparmio e soglia.`;
   }
 }
 
@@ -1585,79 +1723,75 @@ function renderMovimenti() {
   if (filterTipo) all = all.filter(m => m.tipo === filterTipo);
   if (search) all = all.filter(m =>
     (m.descrizione || '').toLowerCase().includes(search) ||
-    (m.categoria || '').toLowerCase().includes(search)
+    (m.categoria || '').toLowerCase().includes(search) ||
+    getCategory(m.categoria).name.toLowerCase().includes(search)
   );
 
   document.getElementById('monthLabel').textContent = monthLabel(currentMonth);
 
   const container = document.getElementById('movimentiTable');
   if (!all.length) {
-    container.innerHTML = '<div class="empty-state">Nessun movimento da mostrare.</div>';
+    container.innerHTML = '<div class="empty-state">Nessun movimento registrato in questo periodo.</div>';
     return;
   }
 
-  container.innerHTML = `
-    <div class="table-wrap"><table>
-      <thead>
-        <tr>
-          <th>Data</th><th>Descrizione</th><th>Categoria</th><th>Tipo</th><th style="text-align:right">Importo</th><th></th>
-        </tr>
-      </thead>
-      <tbody>
-        ${all.map(m => `
-          <tr>
-            <td>${formatDate(m.data)}</td>
-            <td>${escapeHtml(m.descrizione || '—')}</td>
-            <td>${catLabel(m.categoria)}</td>
-            <td>${badgeFor(m._source)}</td>
-            <td style="text-align:right" class="${m.tipo === 'entrata' ? 'amount-pos' : 'amount-neg'}">
-              ${m.tipo === 'entrata' ? '+' : '−'} ${fmt(Number(m.importo))}
-            </td>
-            <td style="text-align:right">
-              ${m._source === 'manuale'
-                ? `<button class="btn btn-danger btn-small" onclick="deleteMovimento('${m.id}')">✕</button>`
-                : `<span class="subtitle">auto</span>`}
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table></div>
-  `;
+  container.innerHTML = `<div class="tx-list">${all.map(m => {
+    const c = getCategory(m.categoria);
+    const title = m.descrizione ? escapeHtml(m.descrizione) : escapeHtml(c.name);
+    return `
+      <div class="tx-item">
+        <div class="tx-avatar" style="background:${c.color}22; border:1px solid ${c.color}55">${c.icon}</div>
+        <div class="tx-main">
+          <div class="tx-title">${title}</div>
+          <div class="tx-meta">
+            <span>${formatDate(m.data)}</span>
+            <span>· ${escapeHtml(c.name)}</span>
+            ${badgeFor(m._source)}
+          </div>
+        </div>
+        <div class="tx-right">
+          <div class="tx-amount ${m.tipo === 'entrata' ? 'amount-pos' : 'amount-neg'}">
+            ${m.tipo === 'entrata' ? '+' : '−'} ${fmt(Number(m.importo))}
+          </div>
+          ${m._source === 'manuale'
+            ? `<button class="btn btn-danger btn-small" onclick="deleteMovimento('${m.id}')">✕</button>`
+            : ''}
+        </div>
+      </div>
+    `;
+  }).join('')}</div>`;
 }
 
 function renderRicorrenti() {
   const container = document.getElementById('ricorrentiTable');
   if (!state.ricorrenti.length) {
-    container.innerHTML = '<div class="empty-state">Nessuna spesa ricorrente.</div>';
+    container.innerHTML = '<div class="empty-state">Nessuna spesa o entrata ricorrente attiva.</div>';
     return;
   }
-  container.innerHTML = `
-    <div class="table-wrap"><table>
-      <thead>
-        <tr><th>Descrizione</th><th>Categoria</th><th>Frequenza</th><th>Inizio</th><th>Fine</th><th style="text-align:right">Importo</th><th></th></tr>
-      </thead>
-      <tbody>
-        ${state.ricorrenti.map(r => {
-          const remOn = r.promemoriaAttivo !== false;
-          return `
-          <tr>
-            <td>${escapeHtml(r.descrizione)}</td>
-            <td>${catLabel(r.categoria)}</td>
-            <td>${r.frequenza}</td>
-            <td>${formatDate(r.dataInizio)}</td>
-            <td>${r.dataFine ? formatDate(r.dataFine) : '<span class="subtitle">—</span>'}</td>
-            <td style="text-align:right" class="${r.tipo === 'entrata' ? 'amount-pos' : 'amount-neg'}">
-              ${r.tipo === 'entrata' ? '+' : '−'} ${fmt(Number(r.importo))}
-            </td>
-            <td style="text-align:right; white-space:nowrap;">
-              <button class="btn btn-secondary btn-small" onclick="toggleRicorrenteRem('${r.id}')" title="Promemoria">${remOn ? '🔔' : '🔕'}</button>
-              <button class="btn btn-danger btn-small" onclick="deleteRicorrente('${r.id}')">✕</button>
-            </td>
-          </tr>
-        `}).join('')}
-      </tbody>
-    </table></div>
-  `;
+  container.innerHTML = `<div class="tx-list">${state.ricorrenti.map(r => {
+    const c = getCategory(r.categoria);
+    const remOn = r.promemoriaAttivo !== false;
+    return `
+      <div class="tx-item">
+        <div class="tx-avatar" style="background:${c.color}22; border:1px solid ${c.color}55">${c.icon}</div>
+        <div class="tx-main">
+          <div class="tx-title">${escapeHtml(r.descrizione)}</div>
+          <div class="tx-meta">
+            <span class="badge badge-recurring">${escapeHtml(r.frequenza)}</span>
+            <span>Dal ${formatDate(r.dataInizio)}</span>
+            ${r.dataFine ? `<span>al ${formatDate(r.dataFine)}</span>` : ''}
+          </div>
+        </div>
+        <div class="tx-right">
+          <div class="tx-amount ${r.tipo === 'entrata' ? 'amount-pos' : 'amount-neg'}">
+            ${r.tipo === 'entrata' ? '+' : '−'} ${fmt(Number(r.importo))}
+          </div>
+          <button class="btn btn-secondary btn-small" onclick="toggleRicorrenteRem('${r.id}')" title="Promemoria">${remOn ? '🔔' : '🔕'}</button>
+          <button class="btn btn-danger btn-small" onclick="deleteRicorrente('${r.id}')">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('')}</div>`;
 }
 
 function renderIndefinite() {
@@ -1666,37 +1800,34 @@ function renderIndefinite() {
     container.innerHTML = '<div class="empty-state">Nessuna spesa a periodo indefinito.</div>';
     return;
   }
-  container.innerHTML = `
-    <div class="table-wrap"><table>
-      <thead>
-        <tr><th>Descrizione</th><th>Categoria</th><th>Inizio</th><th>Stato</th><th style="text-align:right">Importo/mese</th><th></th></tr>
-      </thead>
-      <tbody>
-        ${state.indefinite.map(i => {
-          const remOn = i.promemoriaAttivo !== false;
-          return `
-          <tr>
-            <td>${escapeHtml(i.descrizione)}</td>
-            <td>${catLabel(i.categoria)}</td>
-            <td>${formatDate(i.dataInizio)}</td>
-            <td>${i.attiva === false
+  container.innerHTML = `<div class="tx-list">${state.indefinite.map(i => {
+    const c = getCategory(i.categoria);
+    const remOn = i.promemoriaAttivo !== false;
+    return `
+      <div class="tx-item">
+        <div class="tx-avatar" style="background:${c.color}22; border:1px solid ${c.color}55">${c.icon}</div>
+        <div class="tx-main">
+          <div class="tx-title">${escapeHtml(i.descrizione)}</div>
+          <div class="tx-meta">
+            <span>Dal ${formatDate(i.dataInizio)}</span>
+            ${i.attiva === false
               ? `<span class="badge badge-onetime">Chiusa il ${formatDate(i.dataChiusura)}</span>`
-              : `<span class="badge badge-indefinite">In corso</span>`}</td>
-            <td style="text-align:right" class="${i.tipo === 'entrata' ? 'amount-pos' : 'amount-neg'}">
-              ${i.tipo === 'entrata' ? '+' : '−'} ${fmt(Number(i.importo))}
-            </td>
-            <td style="text-align:right; white-space:nowrap;">
-              <button class="btn btn-secondary btn-small" onclick="toggleIndefinitaRem('${i.id}')" title="Promemoria">${remOn ? '🔔' : '🔕'}</button>
-              ${i.attiva !== false
-                ? `<button class="btn btn-secondary btn-small" onclick="closeIndefinita('${i.id}')">Chiudi</button>`
-                : `<button class="btn btn-success btn-small" onclick="reopenIndefinita('${i.id}')">Riapri</button>`}
-              <button class="btn btn-danger btn-small" onclick="deleteIndefinita('${i.id}')">✕</button>
-            </td>
-          </tr>
-        `}).join('')}
-      </tbody>
-    </table></div>
-  `;
+              : `<span class="badge badge-indefinite">In corso</span>`}
+          </div>
+        </div>
+        <div class="tx-right">
+          <div class="tx-amount ${i.tipo === 'entrata' ? 'amount-pos' : 'amount-neg'}">
+            ${i.tipo === 'entrata' ? '+' : '−'} ${fmt(Number(i.importo))}/m
+          </div>
+          <button class="btn btn-secondary btn-small" onclick="toggleIndefinitaRem('${i.id}')">${remOn ? '🔔' : '🔕'}</button>
+          ${i.attiva !== false
+            ? `<button class="btn btn-secondary btn-small" onclick="closeIndefinita('${i.id}')">Chiudi</button>`
+            : `<button class="btn btn-success btn-small" onclick="reopenIndefinita('${i.id}')">Riapri</button>`}
+          <button class="btn btn-danger btn-small" onclick="deleteIndefinita('${i.id}')">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('')}</div>`;
 }
 
 let statsMonth = null;
@@ -1732,11 +1863,33 @@ function renderCatBars(agg, kind) {
   }
   const total = entries.reduce((s, [,v]) => s + v, 0);
   const max = entries[0][1];
+
+  // Build Conic Gradient for Donut Ring
+  let accPct = 0;
+  const stops = entries.map(([id, val]) => {
+    const c = getCategory(id);
+    const start = accPct;
+    accPct += (val / total) * 100;
+    return `${c.color} ${start.toFixed(1)}% ${accPct.toFixed(1)}%`;
+  }).join(', ');
+
   return `
-    <div class="cat-bar-row" style="font-size:13px; color: var(--muted); border-bottom:1px solid var(--border); padding-bottom:8px;">
-      <span></span>
-      <span>Totale: <strong style="color:var(--text)">${fmt(total)}</strong></span>
-      <span></span>
+    <div class="stats-overview">
+      <div class="donut-ring" style="background: conic-gradient(${stops})">
+        <div class="donut-hole">
+          <span>Totale</span>
+          <strong>${fmt(total)}</strong>
+        </div>
+      </div>
+      <div style="flex:1; min-width:180px;">
+        <div style="font-size:13px; color:var(--muted);">Categoria principale</div>
+        <div style="font-size:18px; font-weight:700; margin-top:4px;">
+          ${getCategory(entries[0][0]).icon} ${escapeHtml(getCategory(entries[0][0]).name)}
+        </div>
+        <div style="font-size:13px; color:var(--muted); margin-top:2px;">
+          ${fmt(entries[0][1])} (${((entries[0][1]/total)*100).toFixed(1)}% del totale)
+        </div>
+      </div>
     </div>
     ${entries.map(([id, val]) => {
       const c = getCategory(id);
@@ -1744,7 +1897,7 @@ function renderCatBars(agg, kind) {
       const widthPct = (val / max) * 100;
       return `
         <div class="cat-bar-row">
-          <span class="cat-emoji" style="font-size:22px; text-align:center;">${c.icon}</span>
+          <div class="tx-avatar" style="width:36px; height:36px; font-size:18px; background:${c.color}22; border:1px solid ${c.color}55">${c.icon}</div>
           <div>
             <div class="cat-bar-name">${escapeHtml(c.name)} <span class="cat-pct">· ${pct.toFixed(1)}%</span></div>
             <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${widthPct}%; background:${c.color}"></div></div>
@@ -1770,13 +1923,13 @@ function renderDiagnostica() {
   const saldo = (state.saldoIniziale || 0) + totEntrate - totUscite;
   el.innerHTML = `
     <div>Saldo iniziale: <strong>${fmt(state.saldoIniziale || 0)}</strong></div>
-    <div>+ Totale entrate (manuali + ricorrenti + indefinite): <span class="amount-pos">${fmt(totEntrate)}</span></div>
-    <div>− Totale uscite (manuali + ricorrenti + indefinite): <span class="amount-neg">${fmt(totUscite)}</span></div>
+    <div>+ Totale entrate: <span class="amount-pos">${fmt(totEntrate)}</span></div>
+    <div>− Totale uscite: <span class="amount-neg">${fmt(totUscite)}</span></div>
     <div style="border-top:1px solid var(--border); padding-top:8px; margin-top:8px;">
       = <strong>Saldo attuale: <span class="${saldo >= 0 ? 'amount-pos' : 'amount-neg'}">${fmt(saldo)}</span></strong>
     </div>
-    <div class="subtitle" style="margin-top:10px;">
-      Movimenti manuali: ${state.movimenti.length} · Occorrenze ricorrenti generate: ${nRic} · Occorrenze indefinite generate: ${nInd}
+    <div class="subtitle" style="margin-top:8px;">
+      Movimenti manuali: ${state.movimenti.length} · Rate ricorrenti: ${nRic} · Rate indefinite: ${nInd}
     </div>
   `;
 }
@@ -1802,7 +1955,7 @@ function formatDate(s) {
   return `${d}/${m}/${y}`;
 }
 function badgeFor(source) {
-  if (source === 'manuale') return '<span class="badge badge-onetime">Manuale</span>';
+  if (source === 'manuale') return '';
   if (source === 'ricorrente') return '<span class="badge badge-recurring">Ricorrente</span>';
   if (source === 'indefinita') return '<span class="badge badge-indefinite">Indefinita</span>';
   return '';
@@ -1903,7 +2056,10 @@ function validateAndCommit(form, builder) {
   }
   builder(fd, importo);
   saveState();
+  const prevTipo = fd.get('tipo') || 'uscita';
   form.reset();
+  const hiddenTipo = form.querySelector('input[name="tipo"]');
+  if (hiddenTipo) hiddenTipo.value = prevTipo;
   form.querySelectorAll('input[type=date]').forEach(inp => { if (!inp.value) inp.value = todayISO(); });
   form.querySelectorAll('input[type=checkbox]').forEach(chk => { chk.checked = true; });
   populateCategorySelects();
@@ -1970,14 +2126,9 @@ document.getElementById('formPromemoria').addEventListener('submit', e => {
   saveState();
 });
 
-document.getElementById('formSaldoIniziale').addEventListener('submit', e => {
-  e.preventDefault();
-  state.saldoIniziale = parseFloat(document.getElementById('saldoInizialeInput').value) || 0;
-  saveState();
-});
-
 document.getElementById('formBudget').addEventListener('submit', e => {
   e.preventDefault();
+  state.saldoIniziale = parseFloat(document.getElementById('saldoInizialeInput').value) || 0;
   state.budget = {
     risparmioMensile: parseFloat(document.getElementById('risparmioInput').value) || 0,
     sogliaMinima: parseFloat(document.getElementById('sogliaInput').value) || 0
@@ -1992,10 +2143,6 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
   });
-});
-
-document.querySelectorAll('form select[name="tipo"]').forEach(sel => {
-  sel.addEventListener('change', () => populateCategorySelects());
 });
 
 (async () => {
@@ -2016,12 +2163,7 @@ document.querySelectorAll('form select[name="tipo"]').forEach(sel => {
       const handle = await idbGetHandle();
       if (handle) {
         fileHandle = handle;
-        const status = document.getElementById('syncStatus');
-        status.classList.add('warning');
-        status.innerHTML = `🔓 File "<strong>${escapeHtml(fileHandle.name)}</strong>" pronto. Clicca "Ricarica" per caricare i dati più recenti.`;
-        document.getElementById('btnSyncConnect').classList.add('hidden');
-        document.getElementById('btnSyncReload').classList.remove('hidden');
-        document.getElementById('btnSyncDisconnect').classList.remove('hidden');
+        renderSyncStatus();
       }
     } catch (e) {}
   }
