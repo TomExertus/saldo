@@ -1,4 +1,4 @@
-const CACHE_NAME = 'saldo-movimenti-v6';
+const CACHE_NAME = 'saldo-movimenti-v7';
 const ASSETS = [
   './',
   './index.html',

@@ -463,6 +463,71 @@
     .balance-amount { font-size: 32px; }
     .tab { font-size: 10px; padding: 8px 2px; }
   }
+
+  /* BANK STATEMENT IMPORT MODAL */
+  dialog.stmt-dialog {
+    width: min(920px, 95vw);
+    max-height: 88vh;
+    background: #111827;
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 22px;
+    padding: 0;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.75);
+    overflow: hidden;
+  }
+  dialog.stmt-dialog::backdrop {
+    background: rgba(3, 7, 18, 0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .stmt-modal-wrap {
+    display: flex; flex-direction: column;
+    max-height: 88vh;
+  }
+  .stmt-modal-head {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    background: rgba(22, 31, 51, 0.9);
+  }
+  .stmt-modal-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .stmt-modal-foot {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    background: rgba(22, 31, 51, 0.95);
+  }
+  .stmt-row {
+    display: grid;
+    grid-template-columns: 28px 110px 1fr 150px 125px 115px;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .stmt-row.dup {
+    opacity: 0.55;
+    border-color: rgba(245, 158, 11, 0.35);
+  }
+  .stmt-row input[type="text"], .stmt-row select {
+    min-height: 34px; padding: 6px 8px; font-size: 13px; border-radius: 8px;
+  }
+  @media (max-width: 720px) {
+    .stmt-row {
+      grid-template-columns: 26px 1fr auto;
+      gap: 8px;
+    }
+    .stmt-row-full { grid-column: 2 / -1; display: flex; gap: 6px; flex-wrap: wrap; }
+  }
 </style>
 </head>
 <body>
@@ -477,11 +542,13 @@
       </div>
     </div>
     <div class="cloud-pill-bar">
+      <button class="pill-btn synced" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Estratto Conto</button>
       <button id="btnICloudShare" class="pill-btn primary" onclick="saveToFileWithPicker()">📁 Salva su File</button>
       <button class="pill-btn" onclick="document.getElementById('importFileTop').click()">📂 Apri File</button>
       <button id="btnSyncReload" class="pill-btn hidden" onclick="reloadFromFile()">🔄 Ricarica dal file</button>
       <button id="btnSyncDisconnect" class="pill-btn hidden" onclick="disconnectSyncFile()">✕ Scollega file</button>
       <input type="file" id="importFileTop" accept=".json,application/json" class="hidden" onchange="importData(event)">
+      <input type="file" id="stmtFileInput" accept=".pdf,.csv,.tsv,.txt,.xlsx,.xls,application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" class="hidden" onchange="handleStatementFile(event)">
     </div>
   </div>
 
@@ -593,7 +660,10 @@
   <!-- TAB: MOVIMENTI -->
   <div id="tab-movimenti" class="tab-content">
     <div class="panel" id="panelAddMovimento">
-      <h3 class="panel-title">Nuovo movimento</h3>
+      <div class="panel-title">
+        <span>Nuovo movimento</span>
+        <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Estratto Conto (PDF / Excel / CSV)</button>
+      </div>
       <form id="formMovimento">
         <div>
           <label>Tipo</label>
@@ -875,6 +945,39 @@
 
 <!-- FLOATING QUICK-ADD BUTTON ON MOBILE -->
 <button class="fab-add" onclick="quickJumpToAdd()" title="Aggiungi movimento">+</button>
+
+<!-- DIALOG ANTEPRIMA IMPORTAZIONE ESTRATTO CONTO -->
+<dialog id="stmtDialog" class="stmt-dialog">
+  <div class="stmt-modal-wrap">
+    <div class="stmt-modal-head">
+      <div>
+        <h3 style="margin:0; font-size:18px;">🏦 Anteprima Importazione Estratto Conto</h3>
+        <div id="stmtSummarySub" class="subtitle" style="margin-top:4px;">Verifica, modifica la categoria o segna come ricorrenti i movimenti rilevati.</div>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="closeStmtDialog()">✕ Chiudi</button>
+    </div>
+    <div class="stmt-modal-body">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+        <div class="actions-row">
+          <button type="button" class="btn btn-secondary btn-small" onclick="toggleAllStmtRows(true)">☑️ Seleziona tutti</button>
+          <button type="button" class="btn btn-secondary btn-small" onclick="toggleAllStmtRows(false)">☐ Deseleziona tutti</button>
+          <button type="button" class="btn btn-secondary btn-small" onclick="excludeStmtDuplicates()">🚫 Escludi duplicati</button>
+        </div>
+        <span id="stmtCountBadge" class="badge badge-recurring" style="font-size:12px; padding:4px 10px;">0 selezionati</span>
+      </div>
+      <div id="stmtRowsContainer"></div>
+    </div>
+    <div class="stmt-modal-foot">
+      <div style="font-size:12px; color:var(--muted);">
+        💡 Puoi cambiare tipo (<strong>Uscita/Entrata</strong>), <strong>Categoria</strong> o impostare una voce come <strong>Ricorrente mensile</strong> prima di confermare.
+      </div>
+      <div class="actions-row">
+        <button type="button" class="btn btn-secondary" onclick="closeStmtDialog()">Annulla</button>
+        <button type="button" class="btn btn-primary" onclick="confirmStatementImport()">✅ Importa selezionati</button>
+      </div>
+    </div>
+  </div>
+</dialog>
 
 <script>
 if ('serviceWorker' in navigator) {
@@ -2143,6 +2246,544 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
   });
 });
+
+// =====================
+// IMPORTATORE ESTRATTO CONTO (PDF, EXCEL .XLSX/.XLS, CSV/TSV)
+// =====================
+let pendingStmtRows = [];
+
+function loadExternalScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) return resolve();
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Impossibile caricare la libreria per leggere questo formato'));
+    document.head.appendChild(s);
+  });
+}
+
+function guessCategoryFromDesc(desc, tipo) {
+  const t = String(desc || '').toLowerCase();
+  if (tipo === 'entrata') {
+    if (/stipend|emolument|salari|busta paga|competenze|retribuz|cedolino/.test(t)) return 'stipendio';
+    if (/bonus|premi| tredicesima|quattordicesima|welfare/.test(t)) return 'bonus';
+    if (/rimbors|storno|accredito|cashback|restituz/.test(t)) return 'rimborso';
+    if (/divid|cedol|interessi|invest|trading|btp|etf/.test(t)) return 'investimenti';
+    if (/regal/.test(t)) return 'regalo_in';
+    return 'altro_e';
+  } else {
+    if (/esselunga|conad|coop|carrefour|lidl|eurospin|md |pam |tigros|despar|penny|supermerc|aliment|spesa|iper|auchan|bennet|crai|famila/.test(t)) return 'spesa';
+    if (/risto|pizz|bar |caff|mc ?donald|burger|poke|sushi|deliveroo|glovo|just ?eat|uber ?eats|osteria|trattoria|pub |gelat|pasticcer/.test(t)) return 'ristoranti';
+    if (/eni |ip |q8 |tamoil|esso |shell|benz|carburant|distributore|autostrad|telepass|unipolmove/.test(t)) return 'carburante';
+    if (/trenitalia|italo|atm |atac|bus |metro|taxi|uber|lime|bird|sharing|parchegg|easypark|ryanair|easyjet|ita airways|trenord/.test(t)) return 'trasporti';
+    if (/affitt|locazion|mutuo|rata mutuo|condomin|ikea|leroy merlin|brico/.test(t)) return 'casa';
+    if (/enel|plenitude|edison|a2a|iren|hera|acea|luce|gas |acqua|tim |vodafone|wind|iliad|fastweb|sky|bollett|cbill|pagopa/.test(t)) return 'bollette';
+    if (/netflix|spotify|amazon prime|prime video|disney|apple\.com\/bill|icloud|youtube|chatgpt|openai|dazn|playstation|xbox|nintendo|abbonament/.test(t)) return 'abbonamenti';
+    if (/farmac|medic|dentist|ospedal|ticket|visita|ottic|analisi|salute|dotto/.test(t)) return 'salute';
+    if (/zara|h&m|zalando|uniqlo|nike|adidas|intimis|calzedonia|oviesse|ovs|abbigliament|scarpe|vinted|shein/.test(t)) return 'abbigliamento';
+    if (/booking|airbnb|hotel|albergo|expedia|viagg|vacanz/.test(t)) return 'viaggi';
+    if (/amazon|amzn|mediaworld|unieuro|euronics|apple store|ebay|aliexpress|paypal/.test(t)) return 'tecnologia';
+    if (/palestr|virgin|mcfit|decathlon|sport|piscina|padel|tennis/.test(t)) return 'sport';
+    if (/scuol|universit|tasse univ|libreria|feltrinelli|mondadori|udemy|corso/.test(t)) return 'istruzione';
+    if (/veterinar|zooplus|arcaplanet|animal/.test(t)) return 'animali';
+    if (/f24|agenzia entrate|impost|bollo|commission|canone|tenuta conto|mav|rav/.test(t)) return 'tasse';
+    if (/cinema|teatro|ticketone|concerto|museo|discotec/.test(t)) return 'tempolibero';
+    return 'altro_u';
+  }
+}
+
+function parseFlexibleDate(raw) {
+  if (!raw) return null;
+  if (raw instanceof Date && !isNaN(raw)) return ymd(raw);
+  const s = String(raw).trim();
+  // Excel serial date (e.g. 45200)
+  if (/^\d{5}(\.\d+)?$/.test(s)) {
+    const serial = parseFloat(s);
+    if (serial > 36526 && serial < 60000) {
+      const utcDays = Math.floor(serial - 25569);
+      const d = new Date(utcDays * 86400 * 1000);
+      return ymd(d);
+    }
+  }
+  // YYYY-MM-DD or YYYY/MM/DD
+  let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+  if (m) {
+    const [, y, mo, da] = m;
+    return `${y}-${mo.padStart(2,'0')}-${da.padStart(2,'0')}`;
+  }
+  // DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY (or 2-digit year)
+  m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/);
+  if (m) {
+    let [, da, mo, y] = m;
+    if (y.length === 2) y = (parseInt(y, 10) > 50 ? '19' : '20') + y;
+    const monthNum = parseInt(mo, 10);
+    const dayNum = parseInt(da, 10);
+    if (monthNum >= 1 && monthNum <= 12 && dayNum >= 1 && dayNum <= 31) {
+      return `${y}-${String(monthNum).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+    }
+  }
+  // DD MMM YYYY (Italian month names: 12 gen 2026)
+  const monthsIt = { gen:1, feb:2, mar:3, apr:4, mag:5, giu:6, lug:7, ago:8, set:9, ott:10, nov:11, dic:12 };
+  m = s.toLowerCase().match(/^(\d{1,2})\s+([a-z]{3})[a-z]*\s+(\d{2,4})/);
+  if (m && monthsIt[m[2]]) {
+    let [, da, mon, y] = m;
+    if (y.length === 2) y = '20' + y;
+    return `${y}-${String(monthsIt[mon]).padStart(2,'0')}-${String(da).padStart(2,'0')}`;
+  }
+  return null;
+}
+
+function parseFlexibleAmount(raw) {
+  if (raw === null || raw === undefined || raw === '') return null;
+  if (typeof raw === 'number' && isFinite(raw)) return raw;
+  let s = String(raw).trim();
+  if (!s) return null;
+  // Handle accounting negative: (123,45) or 123,45-
+  let sign = 1;
+  if (/^\(.*\)$/.test(s) || /-$/.test(s) || /^-/.test(s) || /\b(dare|addebito|uscita|dr)\b/i.test(s)) {
+    if (s.includes('-') || /^\(.*\)$/.test(s)) sign = -1;
+  }
+  s = s.replace(/[€$£\s()a-zA-Z]/g, '');
+  if (!s) return null;
+  if (s.startsWith('-')) { sign = -1; s = s.slice(1); }
+  else if (s.startsWith('+')) { s = s.slice(1); }
+  else if (s.endsWith('-')) { sign = -1; s = s.slice(0, -1); }
+
+  // Determine decimal separator: Italian "1.234,56" vs US "1,234.56"
+  const lastComma = s.lastIndexOf(',');
+  const lastDot = s.lastIndexOf('.');
+  if (lastComma > lastDot) {
+    s = s.replace(/\./g, '').replace(',', '.');
+  } else if (lastDot > lastComma && lastComma !== -1) {
+    s = s.replace(/,/g, '');
+  } else if (lastComma !== -1 && lastDot === -1) {
+    s = s.replace(',', '.');
+  }
+  const val = parseFloat(s);
+  return isFinite(val) ? sign * val : null;
+}
+
+function isLikelyDuplicate(data, importo, tipo) {
+  const absImp = Math.abs(Number(importo));
+  return state.movimenti.some(m =>
+    m.data === data &&
+    m.tipo === tipo &&
+    Math.abs(Number(m.importo) - absImp) < 0.01
+  );
+}
+
+function cleanBankDescription(desc) {
+  let s = String(desc || '').replace(/\s+/g, ' ').trim();
+  // Strip noisy bank prefixes while keeping the merchant/counterparty clear
+  s = s.replace(/^(pagamento pos|acquisto pos|operazione pos|addebito diretto sdd|bonifico sepa disposto a favore di|bonifico a vostro favore da|pagamento carta|carta n\.\s*\**\d+)\s*[-:]?\s*/i, '');
+  return s.trim() || String(desc || '').trim() || 'Movimento estratto conto';
+}
+
+function extractRowsFromTableMatrix(matrix) {
+  const results = [];
+  if (!matrix || !matrix.length) return results;
+
+  // Find header row if present
+  let headerIdx = -1;
+  let colDate = -1, colDesc = -1, colDesc2 = -1, colAmount = -1, colDebit = -1, colCredit = -1;
+
+  for (let r = 0; r < Math.min(25, matrix.length); r++) {
+    const row = (matrix[r] || []).map(c => String(c ?? '').toLowerCase().trim());
+    const nonEmpty = row.filter(Boolean).length;
+    if (nonEmpty < 2) continue;
+
+    let dIdx = row.findIndex(c => /data contabile|data operazione|^data$|date|valuta/.test(c));
+    let descIdx = row.findIndex(c => /descrizione|causale|dettagli|operazione|beneficiario|esercente|description|movimento/.test(c));
+    let amtIdx = row.findIndex(c => /^importo|importo\s*\(|amount|valore|euro/.test(c));
+    let debIdx = row.findIndex(c => /^uscite|^dare$|^addebiti|addebito|debit/.test(c));
+    let credIdx = row.findIndex(c => /^entrate|^avere$|^accrediti|accredito|credit/.test(c));
+
+    if (dIdx !== -1 && (amtIdx !== -1 || debIdx !== -1 || credIdx !== -1)) {
+      headerIdx = r;
+      colDate = dIdx;
+      colDesc = descIdx;
+      colDesc2 = row.findIndex((c, idx) => idx !== descIdx && /dettagli|descrizione|note|esercente|causale/.test(c));
+      colAmount = amtIdx;
+      colDebit = debIdx;
+      colCredit = credIdx;
+      break;
+    }
+  }
+
+  const startRow = headerIdx !== -1 ? headerIdx + 1 : 0;
+
+  for (let r = startRow; r < matrix.length; r++) {
+    const row = matrix[r];
+    if (!row || !row.length) continue;
+
+    let dateStr = null;
+    let descStr = '';
+    let signedAmount = null;
+
+    if (headerIdx !== -1) {
+      dateStr = parseFlexibleDate(row[colDate]);
+      if (!dateStr) {
+        for (let c = 0; c < row.length; c++) {
+          dateStr = parseFlexibleDate(row[c]);
+          if (dateStr) break;
+        }
+      }
+      if (!dateStr) continue;
+
+      if (colDesc !== -1 && row[colDesc]) descStr = String(row[colDesc]).trim();
+      if (colDesc2 !== -1 && row[colDesc2]) {
+        const extra = String(row[colDesc2]).trim();
+        if (extra && !descStr.includes(extra)) descStr = (descStr ? descStr + ' — ' : '') + extra;
+      }
+
+      if (colDebit !== -1 || colCredit !== -1) {
+        const deb = colDebit !== -1 ? parseFlexibleAmount(row[colDebit]) : null;
+        const cred = colCredit !== -1 ? parseFlexibleAmount(row[colCredit]) : null;
+        if (deb !== null && Math.abs(deb) > 0) signedAmount = -Math.abs(deb);
+        else if (cred !== null && Math.abs(cred) > 0) signedAmount = Math.abs(cred);
+      }
+      if (signedAmount === null && colAmount !== -1) {
+        signedAmount = parseFlexibleAmount(row[colAmount]);
+      }
+    } else {
+      // Heuristic row parsing when no header is found
+      const textParts = [];
+      for (let c = 0; c < row.length; c++) {
+        const cell = row[c];
+        if (cell === null || cell === undefined || String(cell).trim() === '') continue;
+        if (!dateStr) {
+          const d = parseFlexibleDate(cell);
+          if (d) { dateStr = d; continue; }
+        }
+        const a = parseFlexibleAmount(cell);
+        if (a !== null && Math.abs(a) > 0 && Math.abs(a) < 1000000 && /[0-9]/.test(String(cell)) && signedAmount === null) {
+          signedAmount = a;
+          continue;
+        }
+        textParts.push(String(cell).trim());
+      }
+      descStr = textParts.join(' ');
+    }
+
+    if (!dateStr || signedAmount === null || Math.abs(signedAmount) < 0.01) continue;
+    if (!descStr) {
+      descStr = row.filter((c, idx) => idx !== colDate && idx !== colAmount && idx !== colDebit && idx !== colCredit && c)
+                   .map(c => String(c).trim()).join(' ');
+    }
+
+    // Check if description explicitly says accredito/stipendio/emolumenti when amount sign is ambiguous
+    let tipo = signedAmount >= 0 ? 'entrata' : 'uscita';
+    if (/stipendio|emolument|accredito|bonifico a vostro favore|versamento/i.test(descStr) && !/addebito|pagamento|commission/i.test(descStr)) {
+      tipo = 'entrata';
+    } else if (/pagamento pos|addebito|prelievo|commissione|f24|bolletta|cbill|pagopa/i.test(descStr)) {
+      tipo = 'uscita';
+    }
+
+    const absImp = Number(Math.abs(signedAmount).toFixed(2));
+    const cleanedDesc = cleanBankDescription(descStr);
+    const cat = guessCategoryFromDesc(cleanedDesc, tipo);
+    const dup = isLikelyDuplicate(dateStr, absImp, tipo);
+
+    results.push({
+      id: uid(),
+      selected: !dup,
+      dup: dup,
+      data: dateStr,
+      descrizione: cleanedDesc,
+      tipo: tipo,
+      importo: absImp,
+      categoria: cat,
+      mode: 'manuale' // 'manuale' | 'ricorrente' | 'indefinita'
+    });
+  }
+  return results;
+}
+
+function parseCSVToMatrix(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+  if (!lines.length) return [];
+  // Detect delimiter (; , \t)
+  const sample = lines.slice(0, 10).join('\n');
+  const counts = {
+    ';': (sample.match(/;/g) || []).length,
+    ',': (sample.match(/,/g) || []).length,
+    '\t': (sample.match(/\t/g) || []).length
+  };
+  const delim = Object.entries(counts).sort((a,b) => b[1] - a[1])[0][0] || ';';
+
+  return lines.map(line => {
+    const out = [];
+    let cur = '', inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        inQuotes = !inQuotes;
+      } else if (ch === delim && !inQuotes) {
+        out.push(cur.trim());
+        cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    out.push(cur.trim());
+    return out;
+  });
+}
+
+async function parsePDFStatement(file) {
+  await loadExternalScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const allLines = [];
+
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    // Group text items by Y coordinate (within 3pt tolerance) to reconstruct visual rows
+    const rowsByY = [];
+    content.items.forEach(item => {
+      const str = (item.str || '').trim();
+      if (!str) return;
+      const x = item.transform[4];
+      const y = item.transform[5];
+      let row = rowsByY.find(r => Math.abs(r.y - y) < 3.5);
+      if (!row) {
+        row = { y, items: [] };
+        rowsByY.push(row);
+      }
+      row.items.push({ x, str });
+    });
+    rowsByY.sort((a, b) => b.y - a.y); // Top to bottom
+    rowsByY.forEach(r => {
+      r.items.sort((a, b) => a.x - b.x); // Left to right
+      allLines.push(r.items.map(i => i.str).join('  '));
+    });
+  }
+
+  // Extract transactions from reconstructed lines
+  const results = [];
+  const lineRegex = /(\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b)(?:\s+\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b)?\s+(.+?)\s+([+-]?\s*(?:\d{1,3}(?:\.\d{3})+|\d+),\d{2}\s*-?)/;
+
+  for (const line of allLines) {
+    if (/saldo iniziale|saldo finale|totale movimenti|riporto|pagina \d/i.test(line)) continue;
+    const m = line.match(lineRegex);
+    if (!m) continue;
+    const dateStr = parseFlexibleDate(m[1]);
+    let descRaw = m[2].replace(/\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b/g, '').trim();
+    const amountRaw = m[3];
+    if (!dateStr || !descRaw) continue;
+
+    let val = parseFlexibleAmount(amountRaw);
+    if (val === null || Math.abs(val) < 0.01) continue;
+
+    // In many Italian PDF bank statements, amounts don't have a minus sign in the "Dare/Addebiti" column unless specified
+    let tipo = val < 0 ? 'uscita' : 'entrata';
+    if (!amountRaw.includes('+') && !amountRaw.includes('-')) {
+      if (/stipend|emolument|accredit|bonifico a vostro favore|versament|rimbors|cedol|interessi/i.test(descRaw)) {
+        tipo = 'entrata';
+      } else {
+        tipo = 'uscita';
+      }
+    }
+
+    const absImp = Number(Math.abs(val).toFixed(2));
+    const cleanedDesc = cleanBankDescription(descRaw);
+    const cat = guessCategoryFromDesc(cleanedDesc, tipo);
+    const dup = isLikelyDuplicate(dateStr, absImp, tipo);
+
+    results.push({
+      id: uid(),
+      selected: !dup,
+      dup: dup,
+      data: dateStr,
+      descrizione: cleanedDesc,
+      tipo: tipo,
+      importo: absImp,
+      categoria: cat,
+      mode: 'manuale'
+    });
+  }
+  return results;
+}
+
+async function handleStatementFile(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  ev.target.value = '';
+
+  const name = file.name.toLowerCase();
+  showToast('Analisi estratto conto in corso…');
+
+  try {
+    let rows = [];
+    if (name.endsWith('.pdf') || file.type === 'application/pdf') {
+      rows = await parsePDFStatement(file);
+    } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+      await loadExternalScript('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+      const buf = await file.arrayBuffer();
+      const wb = window.XLSX.read(buf, { type: 'array', cellDates: true });
+      for (const sheetName of wb.SheetNames) {
+        const sheet = wb.Sheets[sheetName];
+        const matrix = window.XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+        const extracted = extractRowsFromTableMatrix(matrix);
+        if (extracted.length > rows.length) rows = extracted;
+      }
+    } else {
+      const text = await file.text();
+      const matrix = parseCSVToMatrix(text);
+      rows = extractRowsFromTableMatrix(matrix);
+    }
+
+    if (!rows.length) {
+      alert('Nessun movimento riconosciuto automaticamente in questo file.\nAssicurati che il file contenga colonne con Data, Descrizione e Importo (oppure un PDF testuale non scansionato come immagine).');
+      return;
+    }
+
+    pendingStmtRows = rows;
+    openStmtPreviewDialog(file.name);
+  } catch (err) {
+    console.error(err);
+    alert('Errore durante la lettura del file: ' + (err.message || err));
+  }
+}
+
+function openStmtPreviewDialog(fileName) {
+  const dlg = document.getElementById('stmtDialog');
+  const sub = document.getElementById('stmtSummarySub');
+  const dupCount = pendingStmtRows.filter(r => r.dup).length;
+  sub.innerHTML = `File: <strong>${escapeHtml(fileName)}</strong> · Trovati <strong>${pendingStmtRows.length}</strong> movimenti` +
+    (dupCount ? ` (di cui ${dupCount} già presenti deselezionati automaticamente)` : '');
+  renderStmtPreviewRows();
+  if (dlg.showModal) dlg.showModal();
+  else dlg.setAttribute('open', 'open');
+}
+
+function closeStmtDialog() {
+  const dlg = document.getElementById('stmtDialog');
+  if (dlg.close) dlg.close();
+  else dlg.removeAttribute('open');
+}
+
+function renderStmtPreviewRows() {
+  const container = document.getElementById('stmtRowsContainer');
+  const badge = document.getElementById('stmtCountBadge');
+  const selectedCount = pendingStmtRows.filter(r => r.selected).length;
+  badge.textContent = `${selectedCount} di ${pendingStmtRows.length} selezionati`;
+
+  container.innerHTML = pendingStmtRows.map((r, idx) => {
+    const cats = CATEGORIES.filter(c => c.kind === r.tipo);
+    return `
+      <div class="stmt-row ${r.dup ? 'dup' : ''}">
+        <input type="checkbox" ${r.selected ? 'checked' : ''} onchange="updateStmtRow(${idx}, 'selected', this.checked)">
+        <div>
+          <div style="font-weight:700;">${formatDate(r.data)}</div>
+          ${r.dup ? '<span class="badge badge-indefinite">Già presente</span>' : ''}
+        </div>
+        <div>
+          <input type="text" value="${escapeHtml(r.descrizione)}" oninput="updateStmtRow(${idx}, 'descrizione', this.value)">
+        </div>
+        <div class="stmt-row-full" style="display:contents;">
+          <select onchange="updateStmtRow(${idx}, 'categoria', this.value)">
+            ${cats.map(c => `<option value="${c.id}" ${c.id === r.categoria ? 'selected' : ''}>${c.icon} ${escapeHtml(c.name)}</option>`).join('')}
+          </select>
+          <select onchange="updateStmtRow(${idx}, 'mode', this.value)">
+            <option value="manuale" ${r.mode === 'manuale' ? 'selected' : ''}>Singolo</option>
+            <option value="ricorrente" ${r.mode === 'ricorrente' ? 'selected' : ''}>🔁 Ricorrente</option>
+            <option value="indefinita" ${r.mode === 'indefinita' ? 'selected' : ''}>♾️ Indefinita</option>
+          </select>
+          <div style="display:flex; align-items:center; justify-content:flex-end; gap:6px;">
+            <button type="button" class="btn btn-secondary btn-small" onclick="flipStmtRowTipo(${idx})" title="Cambia Entrata/Uscita">
+              <span class="${r.tipo === 'entrata' ? 'amount-pos' : 'amount-neg'}">
+                ${r.tipo === 'entrata' ? '+' : '−'} ${fmt(r.importo)}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function updateStmtRow(idx, field, val) {
+  if (!pendingStmtRows[idx]) return;
+  pendingStmtRows[idx][field] = val;
+  if (field === 'selected') {
+    const selectedCount = pendingStmtRows.filter(r => r.selected).length;
+    document.getElementById('stmtCountBadge').textContent = `${selectedCount} di ${pendingStmtRows.length} selezionati`;
+  }
+}
+
+function flipStmtRowTipo(idx) {
+  const row = pendingStmtRows[idx];
+  if (!row) return;
+  row.tipo = row.tipo === 'entrata' ? 'uscita' : 'entrata';
+  row.categoria = guessCategoryFromDesc(row.descrizione, row.tipo);
+  renderStmtPreviewRows();
+}
+
+function toggleAllStmtRows(val) {
+  pendingStmtRows.forEach(r => { r.selected = val; });
+  renderStmtPreviewRows();
+}
+
+function excludeStmtDuplicates() {
+  pendingStmtRows.forEach(r => { if (r.dup) r.selected = false; });
+  renderStmtPreviewRows();
+}
+
+function confirmStatementImport() {
+  const chosen = pendingStmtRows.filter(r => r.selected);
+  if (!chosen.length) {
+    showToast('Nessun movimento selezionato', true);
+    return;
+  }
+  let nMov = 0, nRic = 0, nInd = 0;
+  chosen.forEach(r => {
+    if (r.mode === 'ricorrente') {
+      state.ricorrenti.push({
+        id: uid(),
+        tipo: r.tipo,
+        importo: r.importo,
+        frequenza: 'mensile',
+        dataInizio: r.data,
+        dataFine: null,
+        categoria: r.categoria,
+        descrizione: r.descrizione,
+        promemoriaAttivo: true
+      });
+      nRic++;
+    } else if (r.mode === 'indefinita') {
+      state.indefinite.push({
+        id: uid(),
+        tipo: r.tipo,
+        importo: r.importo,
+        dataInizio: r.data,
+        categoria: r.categoria,
+        descrizione: r.descrizione,
+        attiva: true,
+        promemoriaAttivo: true
+      });
+      nInd++;
+    } else {
+      state.movimenti.push({
+        id: uid(),
+        tipo: r.tipo,
+        data: r.data,
+        importo: r.importo,
+        categoria: r.categoria,
+        descrizione: r.descrizione
+      });
+      nMov++;
+    }
+  });
+
+  closeStmtDialog();
+  saveState();
+  showToast(`Importati ${chosen.length} movimenti ✓`);
+}
 
 (async () => {
   checkStorage();
