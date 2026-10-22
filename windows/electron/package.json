@@ -28,10 +28,10 @@
       "target": [
         "nsis",
         "portable"
-      ],
-      "artifactName": "SaldoMovimenti-Windows-${target}.${ext}"
+      ]
     },
     "nsis": {
+      "artifactName": "SaldoMovimenti-Windows-Setup.${ext}",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
@@ -39,7 +39,7 @@
       "shortcutName": "Saldo e Movimenti"
     },
     "portable": {
-      "artifactName": "SaldoMovimenti-Windows-Portable.exe"
+      "artifactName": "SaldoMovimenti-Windows-Portable.${ext}"
     }
   }
 }
