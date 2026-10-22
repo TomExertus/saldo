@@ -1,4 +1,4 @@
-const CACHE_NAME = 'saldo-movimenti-v13';
+const CACHE_NAME = 'saldo-movimenti-v14';
 
 self.addEventListener('install', event => {
   self.skipWaiting();

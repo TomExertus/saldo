@@ -1001,14 +1001,15 @@
 
       <div id="saveDialogMacBox" style="display:flex; flex-direction:column; gap:10px; padding:14px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.3); border-radius:12px;">
         <div style="font-size:14px; font-weight:700; color:#fff;">💻 macOS — Salva in una Cartella del Mac (Finder / iCloud Drive)</div>
-        <button type="button" id="btnMacNativePicker" class="btn btn-primary hidden" style="width:100%; justify-content:center;" onclick="triggerMacNativeFilePicker()">
-          📂 Scegli cartella nel Finder (Sincronizzazione automatica)…
+        <button type="button" id="btnMacNativePicker" class="btn btn-primary" style="width:100%; justify-content:center;" onclick="triggerMacNativeFilePicker()">
+          📂 Scegli cartella nel Finder (iCloud Drive / Documenti)…
         </button>
-        <button type="button" class="btn btn-primary" style="width:100%; justify-content:center;" onclick="triggerDirectFolderDownload('Cartella File (Finder › Download)')">
-          📂 Salva nella cartella File / Download del Mac
+        <input type="file" id="macFolderPickerInput" webkitdirectory directory class="hidden" onchange="handleMacFolderPicked(event)">
+        <button type="button" class="btn btn-success" style="width:100%; justify-content:center;" onclick="triggerDirectFolderDownload('Cartella File (Finder › Download)')">
+          📥 Salva direttamente in Finder › Cartella Download
         </button>
         <div style="font-size:12px; color:var(--muted); line-height:1.45;">
-          💡 <em>Suggerimento per Safari su Mac:</em> se in <strong>Safari → Impostazioni → Generali → Posizione download file</strong> selezioni <strong>"Chiedi per ogni download"</strong>, Safari aprirà sempre la finestra del Finder per farti scegliere qualsiasi cartella (es. <em>Documenti</em>, <em>iCloud Drive</em> o <em>Scrivania</em>).
+          💡 <em>Suggerimento per Safari su Mac:</em> se in <strong>Safari → Impostazioni → Generali → Posizione download file</strong> selezioni <strong>"Chiedi per ogni download"</strong>, Safari aprirà sempre la finestra del Finder per scegliere qualsiasi cartella.
         </div>
       </div>
 
@@ -1247,7 +1248,6 @@ async function saveToFileWithPicker() {
   const dlg = document.getElementById('saveFileDialog');
   const iosBox = document.getElementById('saveDialogIOSBox');
   const macBox = document.getElementById('saveDialogMacBox');
-  const macNativeBtn = document.getElementById('btnMacNativePicker');
   const pathBox = document.getElementById('saveDialogCurrentPath');
   const nameInp = document.getElementById('saveFileNameInput');
 
@@ -1273,13 +1273,6 @@ async function saveToFileWithPicker() {
   } else {
     if (iosBox) iosBox.classList.add('hidden');
     if (macBox) macBox.classList.remove('hidden');
-    if (macNativeBtn) {
-      if (typeof window.showSaveFilePicker === 'function') {
-        macNativeBtn.classList.remove('hidden');
-      } else {
-        macNativeBtn.classList.add('hidden');
-      }
-    }
   }
 
   if (dlg && typeof dlg.showModal === 'function') {
@@ -1308,7 +1301,23 @@ async function triggerMacNativeFilePicker() {
       if (e && e.name === 'AbortError') return;
     }
   }
-  await triggerDirectFolderDownload('Cartella File (Finder › Download)');
+  const folderInp = document.getElementById('macFolderPickerInput');
+  if (folderInp) {
+    folderInp.value = '';
+    folderInp.click();
+  } else {
+    await triggerDirectFolderDownload('Cartella File (Finder › Download)');
+  }
+}
+
+async function handleMacFolderPicked(e) {
+  const files = e.target && e.target.files ? Array.from(e.target.files) : [];
+  let folderName = 'Documenti / iCloud Drive';
+  if (files.length > 0 && files[0].webkitRelativePath) {
+    const parts = files[0].webkitRelativePath.split('/');
+    if (parts[0]) folderName = parts[0];
+  }
+  await triggerDirectFolderDownload(`Cartella File (Finder › ${folderName})`);
 }
 
 async function triggerIOSSaveToFilesSheet() {
@@ -1318,9 +1327,10 @@ async function triggerIOSSaveToFilesSheet() {
   try {
     const file = new File([jsonStr], fileName, { type: 'application/json' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      // Importante su iOS Safari: passare SOLO { files: [file] } senza title/text
+      // affinché iOS mostri in primo piano l'azione "Salva su File 📁" con il selettore cartelle.
       await navigator.share({
-        files: [file],
-        title: fileName
+        files: [file]
       });
       setLastSavedFileMeta('App "File" (iCloud Drive / Su iPhone)', fileName);
       closeSaveFileDialog();
