@@ -965,7 +965,7 @@
   <div class="stmt-modal-wrap">
     <div class="stmt-modal-head">
       <div>
-        <h3 style="margin:0; font-size:18px;">🏦 Anteprima Importazione Estratto Conto</h3>
+        <h3 style="margin:0; font-size:18px;">🏦 Anteprima Importazione Estratto Conto <span class="badge" style="font-size:11px; vertical-align:middle; margin-left:6px;">v11</span></h3>
         <div id="stmtSummarySub" class="subtitle" style="margin-top:4px;">Verifica, modifica la categoria o segna come ricorrenti i movimenti rilevati.</div>
       </div>
       <button class="btn btn-secondary btn-small" onclick="closeStmtDialog()">✕ Chiudi</button>
@@ -1001,9 +1001,12 @@ if ('caches' in window) {
   caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(() => {});
 }
 if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(r => r.update().catch(() => {}));
+  }).catch(() => {});
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=10').then(reg => {
-      reg.update();
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      reg.update().catch(() => {});
     }).catch(() => {});
   });
   let refreshing = false;
@@ -2287,27 +2290,27 @@ function guessCategoryFromDesc(desc, tipo) {
   const t = String(desc || '').toLowerCase();
   if (tipo === 'entrata') {
     if (/stipend|emolument|salari|busta paga|competenze|retribuz|cedolino/.test(t)) return 'stipendio';
-    if (/bonus|premi| tredicesima|quattordicesima|welfare/.test(t)) return 'bonus';
+    if (/\b(bonus|premi|tredicesima|quattordicesima|welfare)\b/.test(t)) return 'bonus';
     if (/rimbors|storno|accredito|cashback|restituz/.test(t)) return 'rimborso';
-    if (/divid|cedol|interessi|invest|trading|btp|etf/.test(t)) return 'investimenti';
+    if (/divid|cedol|interessi|invest|trading|\bbtp\b|\betf\b/.test(t)) return 'investimenti';
     if (/regal/.test(t)) return 'regalo_in';
     return 'altro_e';
   } else {
-    if (/esselunga|conad|coop|carrefour|lidl|eurospin|md |pam |tigros|despar|penny|supermerc|aliment|spesa|iper|auchan|bennet|crai|famila/.test(t)) return 'spesa';
-    if (/risto|pizz|bar |caff|mc ?donald|burger|poke|sushi|deliveroo|glovo|just ?eat|uber ?eats|osteria|trattoria|pub |gelat|pasticcer/.test(t)) return 'ristoranti';
-    if (/eni |ip |q8 |tamoil|esso |shell|benz|carburant|distributore|autostrad|telepass|unipolmove/.test(t)) return 'carburante';
-    if (/trenitalia|italo|atm |atac|bus |metro|taxi|uber|lime|bird|sharing|parchegg|easypark|ryanair|easyjet|ita airways|trenord/.test(t)) return 'trasporti';
-    if (/affitt|locazion|mutuo|rata mutuo|condomin|ikea|leroy merlin|brico/.test(t)) return 'casa';
-    if (/enel|plenitude|edison|a2a|iren|hera|acea|luce|gas |acqua|tim |vodafone|wind|iliad|fastweb|sky|bollett|cbill|pagopa/.test(t)) return 'bollette';
-    if (/netflix|spotify|amazon prime|prime video|disney|apple\.com\/bill|icloud|youtube|chatgpt|openai|dazn|playstation|xbox|nintendo|abbonament/.test(t)) return 'abbonamenti';
+    if (/amazon\s*prime|prime\s*video|netflix|spotify|disney|apple\.com\/bill|icloud|youtube|chatgpt|openai|dazn|playstation|xbox|nintendo|abbonament/.test(t)) return 'abbonamenti';
+    if (/amazon|amzn|mediaworld|unieuro|euronics|apple\s*store|ebay|aliexpress/.test(t)) return 'tecnologia';
+    if (/esselunga|conad|\bcoop\b|carrefour|lidl|eurospin|\bmd\b|\bpam\b|tigros|despar|penny|supermerc|aliment|spesa|\biper\b|auchan|bennet|crai|famila/.test(t)) return 'spesa';
+    if (/risto|pizz|\bbar\b|caff|mc\s*donald|burger|poke|sushi|deliveroo|glovo|just\s*eat|uber\s*eats|osteria|trattoria|\bpub\b|gelat|pasticcer/.test(t)) return 'ristoranti';
+    if (/\beni\b|\bip\b|\bq8\b|tamoil|\besso\b|shell|benz|carburant|distributore|autostrad|telepass|unipolmove/.test(t)) return 'carburante';
+    if (/trenitalia|italo|\batm\b|\batac\b|\bbus\b|\bmetro\b|\btaxi\b|\buber\b|\blime\b|\bbird\b|sharing|parchegg|easypark|ryanair|easyjet|ita\s*airways|trenord/.test(t)) return 'trasporti';
+    if (/affitt|locazion|mutuo|rata\s*mutuo|condomin|ikea|leroy\s*merlin|brico/.test(t)) return 'casa';
+    if (/enel|plenitude|edison|a2a|iren|hera|acea|\bluce\b|\bgas\b|acqua|\btim\b|vodafone|wind|iliad|fastweb|\bsky\b|bollett|cbill|pagopa/.test(t)) return 'bollette';
     if (/farmac|medic|dentist|ospedal|ticket|visita|ottic|analisi|salute|dotto/.test(t)) return 'salute';
-    if (/zara|h&m|zalando|uniqlo|nike|adidas|intimis|calzedonia|oviesse|ovs|abbigliament|scarpe|vinted|shein/.test(t)) return 'abbigliamento';
+    if (/zara|h&m|zalando|uniqlo|nike|adidas|intimis|calzedonia|oviesse|\bovs\b|abbigliament|scarpe|vinted|shein/.test(t)) return 'abbigliamento';
     if (/booking|airbnb|hotel|albergo|expedia|viagg|vacanz/.test(t)) return 'viaggi';
-    if (/amazon|amzn|mediaworld|unieuro|euronics|apple store|ebay|aliexpress|paypal/.test(t)) return 'tecnologia';
-    if (/palestr|virgin|mcfit|decathlon|sport|piscina|padel|tennis/.test(t)) return 'sport';
-    if (/scuol|universit|tasse univ|libreria|feltrinelli|mondadori|udemy|corso/.test(t)) return 'istruzione';
+    if (/palestr|virgin|mcfit|decathlon|\bsport\b|piscina|padel|tennis/.test(t)) return 'sport';
+    if (/scuol|universit|tasse\s*univ|libreria|feltrinelli|mondadori|udemy|corso/.test(t)) return 'istruzione';
     if (/veterinar|zooplus|arcaplanet|animal/.test(t)) return 'animali';
-    if (/f24|agenzia entrate|impost|bollo|commission|canone|tenuta conto|mav|rav/.test(t)) return 'tasse';
+    if (/\bf24\b|agenzia\s*entrate|impost|bollo|commission|canone|tenuta\s*conto|\bmav\b|\brav\b/.test(t)) return 'tasse';
     if (/cinema|teatro|ticketone|concerto|museo|discotec/.test(t)) return 'tempolibero';
     return 'altro_u';
   }
@@ -2441,7 +2444,7 @@ function classifyTransactionTipo(signedAmount, explicitColType, descStr, rawAmou
 
   const d = String(descStr || '').toLowerCase();
   const isCreditKw = /stipend|emolument|salari|retribuz|cedolino|pensione|accredit|bonifico\s+(?:sepa\s+)?(?:a\s+(?:vostro|tuo|suo)\s+favore|da\s+|in\s+entrata|ricevuto)|versament|rimbors|storno|cashback|divid|cedol|interessi\s+attivi|giroconto\s+da/i.test(d);
-  const isDebitKw = /pagamento|addebito|prelievo|commission|imposta|bollo|canone|f24|bollett|cbill|pagopa|mav|rav|sdd|utenza|acquisto|pos\b|bancomat|carta\s+di|bonifico\s+(?:sepa\s+)?(?:disposto|a\s+favore\s+di|in\s+uscita)/i.test(d);
+  const isDebitKw = /pagamento|addebito|prelievo|commission|imposta|bollo|canone|f24|bollett|cbill|pagopa|mav|rav|sdd|utenza|acquisto|pos\b|bancomat|carta\s+di|\bcarta\s*\*|bonifico\s+(?:sepa\s+)?(?:disposto|a\s+favore\s+di|in\s+uscita)/i.test(d);
 
   if (isCreditKw && !isDebitKw) return 'entrata';
   if (isDebitKw && !isCreditKw) return 'uscita';
@@ -2623,38 +2626,54 @@ async function parsePDFStatement(file) {
 
   for (let p = 1; p <= pdf.numPages; p++) {
     const page = await pdf.getPage(p);
+    const viewport = page.getViewport({ scale: 1.0 });
     const content = await page.getTextContent();
-    const rowsByY = [];
+    const rawRows = [];
+    let currentSeqRow = null;
 
     content.items.forEach(item => {
       const rawStr = (item.str || '')
         .replace(/[\u2212\u2013\u2014]/g, '-')
         .replace(/[\u00A0\u202F]/g, ' ')
         .trim();
-      if (!rawStr) return;
+
+      if (!rawStr) {
+        if (item.hasEOL && currentSeqRow) currentSeqRow.closed = true;
+        return;
+      }
 
       // Count 4-digit years to infer statement year for short DD/MM dates
       const ym = rawStr.match(/\b(20\d{2})\b/g);
-      if (ym) ym.forEach(y => { yearFreq[y] = (yearFreq[y] || 0) + 1; });
+      if (ym) ym.forEach(yr => { yearFreq[yr] = (yearFreq[yr] || 0) + 1; });
 
-      const x = item.transform[4];
-      const y = item.transform[5];
+      // Convert PDF item matrix into true top-down viewport pixel coordinates
+      let x = item.transform[4];
+      let y = item.transform[5];
+      if (window.pdfjsLib && window.pdfjsLib.Util && viewport && viewport.transform) {
+        const tx = window.pdfjsLib.Util.transform(viewport.transform, item.transform);
+        x = tx[4];
+        y = viewport.height - tx[5]; // Keep top-down order consistent (larger Y = higher on page)
+      }
       const w = item.width || (rawStr.length * 4.5);
 
-      let row = rowsByY.find(r => Math.abs(r.y - y) <= 4.8);
+      // Find matching visual line by Y coordinate (tight 2.8px tolerance), unless previous item had explicit EOL or X jumped backwards to a new line
+      let row = rawRows.find(r => !r.closed && Math.abs(r.y - y) <= 2.8 && !(r.lastX !== undefined && x < r.lastX - 30));
       if (!row) {
-        row = { y, page: p, items: [] };
-        rowsByY.push(row);
+        row = { y, page: p, items: [], closed: false, lastX: x + w };
+        rawRows.push(row);
+      } else {
+        row.lastX = Math.max(row.lastX, x + w);
       }
       row.items.push({ x, endX: x + w, str: rawStr });
+      if (item.hasEOL) row.closed = true;
+      currentSeqRow = row;
     });
 
-    rowsByY.sort((a, b) => b.y - a.y); // Top to bottom
+    rawRows.sort((a, b) => b.y - a.y); // Top to bottom
     const mergedPageRows = [];
 
-    rowsByY.forEach(r => {
+    rawRows.forEach(r => {
       r.items.sort((a, b) => a.x - b.x); // Left to right
-      // Merge adjacent fragments that belong to the same token (gap < 3.5pt)
       const tokens = [];
       for (const it of r.items) {
         const prev = tokens[tokens.length - 1];
@@ -2667,7 +2686,6 @@ async function parsePDFStatement(file) {
         }
       }
       const lineStr = tokens.map(t => t.str).join('  ');
-      lastExtractedRawLines.push(lineStr);
       mergedPageRows.push({ y: r.y, page: p, tokens, text: lineStr });
     });
 
@@ -2676,18 +2694,112 @@ async function parsePDFStatement(file) {
 
   const defaultYear = Object.keys(yearFreq).sort((a, b) => yearFreq[b] - yearFreq[a])[0] || new Date().getFullYear();
 
-  // Regex for date tokens at start of row
-  const fullDateTokenRe = /^(?:(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}|\d{4}[/.-]\d{1,2}[/.-]\d{1,2}|\d{1,2}[\s./-]+(?:gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic|jan|may|jun|jul|aug|sep|oct|dec)[a-z.]*(?:[\s./-]+\d{2,4})?))\b/i;
+  // Regex patterns for dates, timestamps, and currency amounts
+  const fullDateStr = '(?:\\d{1,2}[/.-]\\d{1,2}[/.-]\\d{2,4}|\\d{4}[/.-]\\d{1,2}[/.-]\\d{1,2}|\\d{1,2}[\\s./-]+(?:gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic|jan|may|jun|jul|aug|sep|oct|dec)[a-z.]*(?:[\\s./-]+\\d{2,4})?)';
+  const fullDateTokenRe = new RegExp('^(' + fullDateStr + ')\\b', 'i');
+  const anyFullDateRe = new RegExp('\\b(' + fullDateStr + ')\\b', 'gi');
   const shortDateTokenRe = /^(\d{1,2}[/.]\d{1,2})\b/;
+  const amountPatternStr = '[+-]?\\s*(?:€|EUR)?\\s*(?:\\d{1,3}(?:[.\'’\\s]\\d{3})+|\\d+)[,.]\\d{2}\\s*(?:€|EUR|[+-]|\\bD\\b|\\bA\\b)?';
+  const amountGlobalRe = new RegExp('(?:^|\\s|[€$£])(' + amountPatternStr + ')(?=\\s|$|[€$£])', 'gi');
 
-  // Regex for currency amounts (supports comma decimal 1.234,56 and dot decimal 1,234.56 / 45.00)
-  const amountGlobalRe = /(?:^|\s|[€$£])([+-]?\s*(?:€|EUR)?\s*(?:\d{1,3}(?:[.'’\s]\d{3})+|\d+)[,.]\d{2}\s*(?:€|EUR|[+-]|\bD\b|\bA\b)?)(?=\s|$|[€$£])/gi;
+  // Split any row that accidentally contains multiple concatenated transactions (e.g. when PDF XObjects or streams collapse multiple rows)
+  function splitMultiTransactionRow(row) {
+    const text = row.text.trim();
+    if (!text) return [];
+
+    // Step 1: Split whenever a new Full Date appears after a currency amount OR after substantial non-date text
+    const dateSegments = [];
+    anyFullDateRe.lastIndex = 0;
+    const dateMatches = [];
+    let dm;
+    while ((dm = anyFullDateRe.exec(text)) !== null) {
+      if (parseFlexibleDate(dm[1], defaultYear)) {
+        dateMatches.push({ index: dm.index, end: dm.index + dm[0].length, raw: dm[1] });
+      }
+    }
+
+    if (dateMatches.length > 1) {
+      let segStart = 0;
+      for (let i = 1; i < dateMatches.length; i++) {
+        const prevDate = dateMatches[i - 1];
+        const currDate = dateMatches[i];
+        const between = text.slice(prevDate.end, currDate.index).trim();
+        // If 'between' is empty or just a short separator/code (< 6 chars and no amount), it's Data Valuta of the same transaction
+        const hasAmountBetween = new RegExp(amountPatternStr, 'i').test(between);
+        if (hasAmountBetween || between.length > 10) {
+          dateSegments.push(text.slice(segStart, currDate.index).trim());
+          segStart = currDate.index;
+        }
+      }
+      dateSegments.push(text.slice(segStart).trim());
+    } else {
+      dateSegments.push(text);
+    }
+
+    // Step 2: Within each date segment, split if multiple transactions are grouped under the same date
+    // (e.g. separated by HH:MM timestamps or by [Amount] -> [New Merchant/Description Words] -> [Amount])
+    const finalRows = [];
+    let inheritedDateStr = null;
+
+    for (const seg of dateSegments) {
+      // Check if segment starts with a date so subsequent sub-segments can inherit it
+      const leadD = seg.match(fullDateTokenRe);
+      if (leadD) inheritedDateStr = leadD[1];
+
+      // Find all currency amounts in 'seg'
+      const amtRegex = new RegExp('(?:^|\\s|[€$£])(' + amountPatternStr + ')(?=\\s|$|[€$£])', 'gi');
+      const amtSpans = [];
+      let m;
+      while ((m = amtRegex.exec(seg)) !== null) {
+        const rawAmt = m[1].trim();
+        const start = m.index + m[0].indexOf(m[1]);
+        const end = start + m[1].length;
+        const before = seg.slice(0, start).trim().toLowerCase();
+        if (/(?:\bdel|\bil|\bal|\bdal|\bore|\bh\.|\bdata|\bvaluta|\bn\.|\bnr\.|\btasso|\bcambio)\s*$/.test(before)) continue;
+        amtSpans.push({ start, end, raw: rawAmt });
+      }
+
+      if (amtSpans.length <= 1) {
+        finalRows.push({ y: row.y, page: row.page, tokens: row.tokens, text: seg });
+        continue;
+      }
+
+      // Check if there are description words (>2 letters, not EUR/USD/DARE/AVERE) between amounts
+      let subStart = 0;
+      for (let i = 0; i < amtSpans.length - 1; i++) {
+        const curAmt = amtSpans[i];
+        const nextAmt = amtSpans[i + 1];
+        const between = seg.slice(curAmt.end, nextAmt.start).trim();
+        const strippedBetween = between.replace(/\b(eur|euro|usd|gbp|chf|dare|avere|saldo|contabile|disponibile)\b/gi, '').trim();
+        const hasDescWords = /[a-zA-Z]{3,}/.test(strippedBetween) || /\b(?:[01]?\d|2[0-3]):[0-5]\d\b/.test(strippedBetween);
+
+        if (hasDescWords) {
+          // If the next amount is immediately followed by a Balance amount (no words between i+1 and i+2), don't split between i and i+1 if i was just part of a pair;
+          // Wait: curAmt has words AFTER it, so curAmt is the end of a transaction!
+          let piece = seg.slice(subStart, curAmt.end).trim();
+          if (inheritedDateStr && !fullDateTokenRe.test(piece)) {
+            piece = inheritedDateStr + '  ' + piece;
+          }
+          finalRows.push({ y: row.y, page: row.page, tokens: row.tokens, text: piece });
+          subStart = curAmt.end;
+        }
+      }
+      let lastPiece = seg.slice(subStart).trim();
+      if (lastPiece) {
+        if (inheritedDateStr && !fullDateTokenRe.test(lastPiece) && subStart > 0) {
+          lastPiece = inheritedDateStr + '  ' + lastPiece;
+        }
+        finalRows.push({ y: row.y, page: row.page, tokens: row.tokens, text: lastPiece });
+      }
+    }
+
+    return finalRows;
+  }
 
   function analyzeRow(row, colHeaders) {
     const text = row.text.trim();
     if (!text) return { skip: true };
 
-    // Detect if this row is a table header defining Dare/Avere/Importo/Saldo columns
     const lower = text.toLowerCase();
     if (/\b(data\s*contabile|data\s*operazione|data\s*valuta|descrizione|causale|movimenti)\b/.test(lower) &&
         /\b(addebiti|accrediti|dare|avere|uscite|entrate|importo|saldo)\b/.test(lower) &&
@@ -2703,7 +2815,6 @@ async function parsePDFStatement(file) {
       return { skip: true, isHeader: true };
     }
 
-    // Filter out page numbers, summary/balance lines, and non-transaction boilerplate
     if (/^\s*(pagina|pag\.|foglio)\s+\d+/i.test(text)) return { skip: true };
     if (/^\s*(saldo\s+(iniziale|finale|precedente|contabile|disponibile|liquido)|totale\s+(movimenti|addebiti|accrediti|operazioni|entrate|uscite|periodo|dare|avere)|riporto|a\s+riportare)\b/i.test(text)) {
       return { skip: true, isSummary: true };
@@ -2715,15 +2826,13 @@ async function parsePDFStatement(file) {
     let workText = text;
     let foundDate = null;
 
-    // 1. Check for leading date (allowing optional bullet/index prefix like "* " or "01 ")
+    // 1. Check for leading date, OR date preceded by a timestamp/category/prefix
     const prefixClean = workText.replace(/^(?:[*•·\-]|\d{1,2}\))\s+/, '');
     let dm = prefixClean.match(fullDateTokenRe);
     if (!dm && row.tokens.length > 0 && row.tokens[0].x < 180) {
-      // Allow short DD/MM date if it's in the left date column and followed by space + another token
       const sm = prefixClean.match(shortDateTokenRe);
       if (sm) {
         const afterShort = prefixClean.slice(sm[0].length).trim();
-        // Make sure DD.MM isn't actually the only number on the line (an amount)
         if (afterShort.length > 2 && /\d+[,.]\d{2}/.test(afterShort)) {
           dm = sm;
         }
@@ -2735,7 +2844,6 @@ async function parsePDFStatement(file) {
       if (parsedD) {
         foundDate = parsedD;
         workText = prefixClean.slice(dm[0].length).trim();
-        // Strip optional 2nd date (Data Valuta) and 3rd date right after Data Contabile
         for (let k = 0; k < 2; k++) {
           const dm2 = workText.match(fullDateTokenRe) || workText.match(shortDateTokenRe);
           if (dm2 && parseFlexibleDate(dm2[1], defaultYear)) {
@@ -2743,6 +2851,20 @@ async function parsePDFStatement(file) {
           } else {
             break;
           }
+        }
+      }
+    } else {
+      // Check if a full date appears slightly inside the line (e.g. after HH:MM or operation type, not preceded by "del"/"il")
+      anyFullDateRe.lastIndex = 0;
+      let innerDm;
+      while ((innerDm = anyFullDateRe.exec(workText)) !== null) {
+        const beforeD = workText.slice(0, innerDm.index).trim().toLowerCase();
+        if (/(?:\bdel|\bil|\bal|\bdal|\bdata|\bvaluta)\s*$/.test(beforeD)) continue;
+        const parsedD = parseFlexibleDate(innerDm[1], defaultYear);
+        if (parsedD) {
+          foundDate = parsedD;
+          workText = (workText.slice(0, innerDm.index) + ' ' + workText.slice(innerDm.index + innerDm[0].length)).trim();
+          break;
         }
       }
     }
@@ -2757,18 +2879,15 @@ async function parsePDFStatement(file) {
       const beforeText = workText.slice(0, matchIndex).trim().toLowerCase();
       const afterText = workText.slice(matchIndex + am[1].length).trim().toLowerCase();
 
-      // Skip numbers that are clearly dates/times/rates inside the description
       if (/(?:\bdel|\bil|\bal|\bdal|\bore|\bh\.|\bdata|\bvaluta|\bn\.|\bnr\.|\btasso|\bcambio|\bcommissioni|\bcomm\.)\s*$/.test(beforeText)) {
         continue;
       }
       if (/^(?:[/.-]\d{2,4}|%|\s*%|\s*ore\b)/.test(afterText)) {
         continue;
       }
-      // If the number uses a dot (e.g. 12.10) without comma, verify it's not a DD.MM date inside description
       if (rawAmt.includes('.') && !rawAmt.includes(',') && !/[+-€$£]/.test(rawAmt)) {
         const parts = rawAmt.split('.');
         if (parts.length === 2 && parseInt(parts[0], 10) <= 31 && parseInt(parts[1], 10) <= 12 && candidates.length < 2) {
-          // Check if there is a comma-decimal amount later in the same line
           const restOfLine = workText.slice(matchIndex + am[1].length);
           if (/\d+,\d{2}\b/.test(restOfLine)) continue;
         }
@@ -2777,7 +2896,6 @@ async function parsePDFStatement(file) {
       const numVal = parseFlexibleAmount(rawAmt);
       if (numVal === null) continue;
 
-      // Estimate X coordinate of this amount from row.tokens
       const cleanDigits = rawAmt.replace(/[€$£\s+]/g, '');
       let tokenX = 450;
       for (let ti = row.tokens.length - 1; ti >= 0; ti--) {
@@ -2796,7 +2914,6 @@ async function parsePDFStatement(file) {
       });
     }
 
-    // Filter out 0,00 if there is a non-zero candidate on the same line
     let nonZero = candidates.filter(c => Math.abs(c.val) >= 0.01);
     let chosenAmount = null;
     let stripRanges = [];
@@ -2805,20 +2922,22 @@ async function parsePDFStatement(file) {
       chosenAmount = nonZero[0];
       stripRanges = candidates.map(c => [c.start, c.end]);
     } else if (nonZero.length >= 2) {
-      // If the page has a "Saldo" column on the far right, exclude the rightmost amount if it aligns with Saldo
       if (colHeaders.balanceX !== null) {
         const sortedByBalanceDist = [...nonZero].sort((a, b) => Math.abs(a.x - colHeaders.balanceX) - Math.abs(b.x - colHeaders.balanceX));
         const balanceCandidate = sortedByBalanceDist[0];
         const others = nonZero.filter(c => c !== balanceCandidate);
         chosenAmount = others[others.length - 1];
       } else {
-        // Pick the rightmost amount (which is the Amount column, whereas earlier numbers in the line are in the description)
-        chosenAmount = nonZero[nonZero.length - 1];
+        // When a row has [Importo, Saldo] at the end and Importo has an explicit +/- sign while Saldo doesn't, prefer the signed Importo!
+        const firstCand = nonZero[nonZero.length - 2];
+        const lastCand = nonZero[nonZero.length - 1];
+        if (/[-+]/.test(firstCand.raw) && !/[-+]/.test(lastCand.raw)) {
+          chosenAmount = firstCand;
+        } else {
+          chosenAmount = lastCand;
+        }
       }
-      stripRanges = [
-        [chosenAmount.start, chosenAmount.end],
-        ...candidates.filter(c => Math.abs(c.val) < 0.01 || (colHeaders.balanceX !== null && Math.abs(c.x - colHeaders.balanceX) < 35)).map(c => [c.start, c.end])
-      ];
+      stripRanges = candidates.map(c => [c.start, c.end]);
     }
 
     let explicitColType = null;
@@ -2830,7 +2949,6 @@ async function parsePDFStatement(file) {
       }
     }
 
-    // Remove chosen amount (and any 0,00 / balance column) from workText to get description
     let descText = workText;
     if (stripRanges.length) {
       stripRanges.sort((a, b) => b[0] - a[0]);
@@ -2840,10 +2958,13 @@ async function parsePDFStatement(file) {
     }
     descText = descText.replace(/\s+/g, ' ').replace(/^[\s\-–—·|;:,€]+|[\s\-–—·|;:,€]+$/g, '').trim();
 
+    const startsWithTimestamp = /^\b(?:[01]?\d|2[0-3]):[0-5]\d\b/.test(descText);
+
     return {
       skip: false,
       y: row.y,
       date: foundDate,
+      startsWithTimestamp,
       amountObj: chosenAmount ? { val: chosenAmount.val, raw: chosenAmount.raw, colType: explicitColType, x: chosenAmount.x } : null,
       desc: descText
     };
@@ -2878,7 +2999,6 @@ async function parsePDFStatement(file) {
     });
   }
 
-  // Process page by page using the multi-line state machine
   let currentTx = null;
   let lastSeenDate = null;
   let colHeaders = { debitX: null, creditX: null, amountX: null, balanceX: null };
@@ -2887,7 +3007,17 @@ async function parsePDFStatement(file) {
     let stopPageSection = false;
     const analyzed = [];
 
+    // First expand any multi-transaction rows
+    const expandedRows = [];
     for (const r of pageRows) {
+      const subRows = splitMultiTransactionRow(r);
+      for (const sr of subRows) {
+        lastExtractedRawLines.push(sr.text);
+        expandedRows.push(sr);
+      }
+    }
+
+    for (const r of expandedRows) {
       const info = analyzeRow(r, colHeaders);
       if (info.isHeader) {
         stopPageSection = false;
@@ -2910,16 +3040,26 @@ async function parsePDFStatement(file) {
       if (line.date) {
         lastSeenDate = line.date;
 
-        // If previous transaction is open:
-        if (currentTx) {
-          if (currentTx.amountObj !== null) {
-            finalizeTx(currentTx);
-            currentTx = null;
-          } else if (currentTx.descParts.length === 0 && Math.abs(currentTx.y - line.y) <= 12) {
-            // Two vertically split dates for the same row
-          } else {
-            currentTx = null;
-          }
+        // Case A: Current transaction already has an amount, and this line has a Date (e.g. Data Valuta on 2nd line) + description, NO amount, no timestamp, and the next line is NOT a dateless amount line
+        const nextHasDatelessAmount = nextLine && !nextLine.date && nextLine.amountObj !== null;
+        if (currentTx && currentTx.amountObj !== null && line.amountObj === null && !line.startsWithTimestamp &&
+            Math.abs(currentTx.y - line.y) <= 20 && !nextHasDatelessAmount) {
+          if (line.desc) currentTx.descParts.push(line.desc);
+          currentTx.y = line.y;
+          continue;
+        }
+
+        // Case B: Current transaction has NO amount yet, and this line is close vertically (e.g. Data Valuta + Amount on 2nd line, or vertically-centered Date)
+        if (currentTx && currentTx.amountObj === null && Math.abs(currentTx.y - line.y) <= 28) {
+          currentTx.date = line.date;
+          currentTx.y = line.y;
+          if (line.desc) currentTx.descParts.push(line.desc);
+          if (line.amountObj) currentTx.amountObj = line.amountObj;
+          continue;
+        }
+
+        if (currentTx && currentTx.amountObj !== null) {
+          finalizeTx(currentTx);
         }
 
         currentTx = {
@@ -2929,7 +3069,6 @@ async function parsePDFStatement(file) {
           amountObj: line.amountObj
         };
 
-        // Attach any orphan description/amount lines that appeared immediately above a vertically-centered date
         if (preLines.length > 0) {
           for (const pl of preLines) {
             if (Math.abs(pl.y - line.y) <= 26) {
@@ -2943,21 +3082,28 @@ async function parsePDFStatement(file) {
         if (line.desc) currentTx.descParts.push(line.desc);
       } else {
         // Line has NO leading date
-        if (line.amountObj !== null) {
+        if (line.startsWithTimestamp && lastSeenDate) {
+          if (currentTx && currentTx.amountObj !== null) {
+            finalizeTx(currentTx);
+          }
+          currentTx = {
+            date: lastSeenDate,
+            y: line.y,
+            descParts: line.desc ? [line.desc] : [],
+            amountObj: line.amountObj
+          };
+        } else if (line.amountObj !== null) {
           if (currentTx && currentTx.amountObj === null) {
-            // Multi-line row where Date was on Line 1 and Amount is on Line 2/3/4
             if (line.desc) currentTx.descParts.push(line.desc);
             currentTx.amountObj = line.amountObj;
             currentTx.y = line.y;
           } else if (nextLine && nextLine.date && nextLine.amountObj === null && Math.abs(line.y - nextLine.y) <= 18) {
-            // Amount appeared on the line just above its vertically-centered Date line
             if (currentTx && currentTx.amountObj !== null) {
               finalizeTx(currentTx);
               currentTx = null;
             }
             preLines.push(line);
           } else if (lastSeenDate) {
-            // Same-date operation where the bank omitted repeating the date
             if (currentTx && currentTx.amountObj !== null) {
               finalizeTx(currentTx);
             }
@@ -2971,13 +3117,11 @@ async function parsePDFStatement(file) {
             preLines.push(line);
           }
         } else if (line.desc) {
-          // Pure description line (no date, no amount)
-          // Check if it belongs to the NEXT line (when nextLine has a vertically-centered Date+Amount and no desc of its own)
           if (currentTx && currentTx.amountObj !== null && nextLine && nextLine.date && !nextLine.desc && Math.abs(line.y - nextLine.y) <= 16) {
             finalizeTx(currentTx);
             currentTx = null;
             preLines.push(line);
-          } else if (currentTx && currentTx.descParts.length < 7) {
+          } else if (currentTx && currentTx.descParts.length < 4) {
             currentTx.descParts.push(line.desc);
             currentTx.y = line.y;
           } else {
