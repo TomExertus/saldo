@@ -659,10 +659,23 @@
 
   <!-- TAB: MOVIMENTI -->
   <div id="tab-movimenti" class="tab-content">
+    <div class="panel" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(56, 189, 248, 0.12)); border-color: rgba(16, 185, 129, 0.4); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div style="font-size: 15px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
+          <span>🏦 Importa Estratto Conto Bancario</span>
+          <span class="badge badge-income">PDF · Excel · CSV</span>
+        </div>
+        <div class="subtitle" style="margin-top: 3px;">
+          Riconosce in automatico spese, addebiti POS/SDD, stipendi (emolumenti), bonifici e accrediti con anteprima di controllo.
+        </div>
+      </div>
+      <button type="button" class="btn btn-success" onclick="document.getElementById('stmtFileInput').click()">📄 Scegli file estratto conto…</button>
+    </div>
+
     <div class="panel" id="panelAddMovimento">
       <div class="panel-title">
-        <span>Nuovo movimento</span>
-        <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Estratto Conto (PDF / Excel / CSV)</button>
+        <span>Nuovo movimento manuale</span>
+        <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Estratto Conto</button>
       </div>
       <form id="formMovimento">
         <div>
@@ -928,14 +941,15 @@
     </div>
 
     <div class="panel">
-      <h3 class="panel-title">📁 Salvataggio su File & Backup</h3>
+      <h3 class="panel-title">📁 Salvataggio su File, Estratto Conto & Backup</h3>
       <div class="subtitle" style="margin-bottom:14px;">
-        Premi <strong>"Salva su File"</strong> per scegliere la cartella di destinazione (es. nell'app <em>File</em> su iPhone/iPad o in una cartella sul Mac) e salvare il tuo file <code>saldo-dati.json</code>.
+        Premi <strong>"Salva su File"</strong> per scegliere la cartella di destinazione (es. nell'app <em>File</em> su iPhone/iPad o in una cartella sul Mac) e salvare il tuo file <code>saldo-dati.json</code>, oppure importa un estratto conto bancario.
       </div>
       <div class="actions-row">
+        <button class="btn btn-success" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Estratto Conto (PDF / Excel / CSV)</button>
         <button class="btn btn-primary" onclick="saveToFileWithPicker()">📁 Salva su File</button>
         <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Apri File</button>
-        <button class="btn btn-success" onclick="exportData()">📥 Scarica Backup JSON</button>
+        <button class="btn btn-secondary" onclick="exportData()">📥 Scarica Backup JSON</button>
         <input type="file" id="importFile" accept=".json,application/json" class="hidden" onchange="importData(event)">
         <button class="btn btn-danger" onclick="resetData()">🗑 Cancella tutto</button>
       </div>
@@ -980,9 +994,12 @@
 </dialog>
 
 <script>
+if ('caches' in window) {
+  caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(() => {});
+}
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then(reg => {
+    navigator.serviceWorker.register('./sw.js?v=9').then(reg => {
       reg.update();
     }).catch(() => {});
   });
