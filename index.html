@@ -473,15 +473,14 @@
       <div class="brand-logo">💰</div>
       <div>
         <h1>Saldo e Movimenti</h1>
-        <div class="subtitle" id="syncStatus">☁️ Salvato sul dispositivo · Sincronizzazione iCloud pronta</div>
+        <div class="subtitle" id="syncStatus">📁 Salvato sul dispositivo · Premi "Salva su File" per scegliere la cartella</div>
       </div>
     </div>
     <div class="cloud-pill-bar">
-      <button id="btnICloudShare" class="pill-btn primary" onclick="saveToICloudDrive()">☁️ Salva su iCloud</button>
-      <button class="pill-btn" onclick="document.getElementById('importFileTop').click()">📂 Apri</button>
-      <button id="btnSyncConnect" class="pill-btn" onclick="connectSyncFile()">🔗 Auto-Sync</button>
-      <button id="btnSyncReload" class="pill-btn hidden" onclick="reloadFromFile()">🔄 Ricarica</button>
-      <button id="btnSyncDisconnect" class="pill-btn hidden" onclick="disconnectSyncFile()">✕</button>
+      <button id="btnICloudShare" class="pill-btn primary" onclick="saveToFileWithPicker()">📁 Salva su File…</button>
+      <button class="pill-btn" onclick="document.getElementById('importFileTop').click()">📂 Apri File…</button>
+      <button id="btnSyncReload" class="pill-btn hidden" onclick="reloadFromFile()">🔄 Ricarica dal file</button>
+      <button id="btnSyncDisconnect" class="pill-btn hidden" onclick="disconnectSyncFile()">✕ Scollega file</button>
       <input type="file" id="importFileTop" accept=".json,application/json" class="hidden" onchange="importData(event)">
     </div>
   </div>
@@ -859,14 +858,14 @@
     </div>
 
     <div class="panel">
-      <h3 class="panel-title">☁️ Sincronizzazione iCloud Drive & Backup</h3>
+      <h3 class="panel-title">📁 Salvataggio su File & Backup</h3>
       <div class="subtitle" style="margin-bottom:14px;">
-        Salva o carica il tuo file <code>saldo-dati.json</code> su <strong>iCloud Drive</strong> per avere gli stessi dati su iPhone, iPad e Mac.
+        Premi <strong>"Salva su File…"</strong> per scegliere la cartella di destinazione (es. nell'app <em>File</em> su iPhone/iPad o in una cartella sul Mac) e salvare il tuo file <code>saldo-dati.json</code>.
       </div>
       <div class="actions-row">
-        <button class="btn btn-primary" onclick="saveToICloudDrive()">☁️ Salva su iCloud Drive</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Apri da iCloud / File</button>
-        <button class="btn btn-success" onclick="exportData()">📥 Scarica JSON</button>
+        <button class="btn btn-primary" onclick="saveToFileWithPicker()">📁 Salva su File…</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Apri File…</button>
+        <button class="btn btn-success" onclick="exportData()">📥 Scarica Backup JSON</button>
         <input type="file" id="importFile" accept=".json,application/json" class="hidden" onchange="importData(event)">
         <button class="btn btn-danger" onclick="resetData()">🗑 Cancella tutto</button>
       </div>
@@ -945,7 +944,7 @@ function checkStorage() {
   } catch (e) { storageOK = false; }
 }
 
-const FSA_SUPPORTED = typeof window.showSaveFilePicker === 'function' && typeof window.showOpenFilePicker === 'function';
+const FSA_SUPPORTED = typeof window.showSaveFilePicker === 'function';
 let fileHandle = null;
 let writingToFile = false;
 
@@ -1005,24 +1004,45 @@ async function idbClearHandle() {
   });
 }
 
-async function saveToICloudDrive() {
+// Fa scegliere il percorso all'utente:
+// 1) Se il browser supporta showSaveFilePicker (macOS/desktop), apre direttamente il selettore di cartella/percorso e collega il file.
+// 2) Su iOS/iPadOS apre il selettore nativo di iOS ("Salva su File") che permette di scegliere la cartella nell'app File.
+async function saveToFileWithPicker() {
   const payload = { _format: 'saldo-sync-v1', updatedAt: new Date().toISOString(), data: state };
   const jsonStr = JSON.stringify(payload, null, 2);
   const fileName = 'saldo-dati.json';
+
+  if (typeof window.showSaveFilePicker === 'function') {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: fileName,
+        types: [{ description: 'File JSON Saldo', accept: { 'application/json': ['.json'] } }]
+      });
+      fileHandle = handle;
+      await idbSetHandle(handle);
+      await writeToFileHandle();
+      renderSyncStatus();
+      showToast(`Salvato in ${handle.name} ✓`);
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+    }
+  }
+
   try {
     const file = new File([jsonStr], fileName, { type: 'application/json' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({
         files: [file],
-        title: 'Saldo e Movimenti — iCloud Backup',
-        text: 'Scegli "Salva su File" per salvare su iCloud Drive'
+        title: fileName
       });
-      showToast('Salvato su iCloud Drive ✓');
+      showToast('File salvato ✓');
       return;
     }
   } catch (e) {
     if (e && e.name === 'AbortError') return;
   }
+
   exportData();
 }
 
@@ -1058,35 +1078,8 @@ async function readFromFileHandle() {
   } catch (e) { return null; }
 }
 
-async function connectSyncFile() {
-  if (!FSA_SUPPORTED) { saveToICloudDrive(); return; }
-  try {
-    const handle = await window.showSaveFilePicker({
-      suggestedName: 'saldo-dati.json',
-      types: [{ description: 'File dati Saldo', accept: { 'application/json': ['.json'] } }]
-    });
-    fileHandle = handle;
-    await idbSetHandle(handle);
-    const existing = await readFromFileHandle();
-    if (existing && (existing.movimenti || existing.ricorrenti)) {
-      if (confirm('Il file selezionato contiene già dati. Vuoi caricarli?')) {
-        state = Object.assign(emptyState(), existing);
-        state.budget = Object.assign(emptyState().budget, existing.budget || {});
-        state.promemoria = Object.assign(emptyState().promemoria, existing.promemoria || {});
-        migrateCategories();
-      }
-    }
-    await writeToFileHandle();
-    showToast('Sincronizzato ✓');
-    renderSyncStatus();
-    saveState({ silent: true });
-  } catch (e) {
-    if (e.name !== 'AbortError') showToast('Connessione file fallita', true);
-  }
-}
-
 async function disconnectSyncFile() {
-  if (!confirm('Scollegare il file automatico?')) return;
+  if (!confirm('Scollegare il file selezionato?')) return;
   fileHandle = null;
   await idbClearHandle();
   renderSyncStatus();
@@ -1106,19 +1099,16 @@ async function reloadFromFile() {
 
 function renderSyncStatus() {
   const el = document.getElementById('syncStatus');
-  const btnConn = document.getElementById('btnSyncConnect');
   const btnRel = document.getElementById('btnSyncReload');
   const btnDis = document.getElementById('btnSyncDisconnect');
   if (fileHandle) {
-    el.innerHTML = `✅ Sincronizzato con <strong>${escapeHtml(fileHandle.name || 'file')}</strong>`;
-    btnConn.classList.add('hidden');
-    btnRel.classList.remove('hidden');
-    btnDis.classList.remove('hidden');
+    el.innerHTML = `✅ Collegato al file <strong>${escapeHtml(fileHandle.name || 'saldo-dati.json')}</strong> (salvataggio automatico)`;
+    if (btnRel) btnRel.classList.remove('hidden');
+    if (btnDis) btnDis.classList.remove('hidden');
   } else {
-    el.innerHTML = `☁️ Salvato sul dispositivo · Pronto per iCloud`;
-    btnConn.classList.toggle('hidden', !FSA_SUPPORTED);
-    btnRel.classList.add('hidden');
-    btnDis.classList.add('hidden');
+    el.innerHTML = `📁 Salvato sul dispositivo · Usa "Salva su File…" per scegliere dove salvare`;
+    if (btnRel) btnRel.classList.add('hidden');
+    if (btnDis) btnDis.classList.add('hidden');
   }
 }
 
