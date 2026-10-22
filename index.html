@@ -324,8 +324,11 @@
 
   <!-- BALANCE CARD -->
   <div class="balance-card">
-    <div class="balance-label">Saldo attuale</div>
-    <div id="balanceAmount" class="balance-amount">€ 0,00</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div class="balance-label">Saldo attuale <span style="font-size:11px; text-transform:none; opacity:0.8;">(tocca per impostare)</span></div>
+      <button class="btn btn-secondary btn-small" onclick="editCurrentBalancePrompt()">✏️ Imposta saldo attuale</button>
+    </div>
+    <div id="balanceAmount" class="balance-amount" style="cursor:pointer;" onclick="editCurrentBalancePrompt()" title="Tocca per modificare il saldo attuale">€ 0,00</div>
     <div class="stats-row">
       <div class="stat">
         <div class="stat-label">Entrate del mese</div>
@@ -365,6 +368,10 @@
         <div class="budget-cell">
           <div class="budget-cell-label">Spese fisse residue</div>
           <div id="budgetUpcoming" class="budget-cell-value">—</div>
+        </div>
+        <div class="budget-cell editable" onclick="editBudgetField('saldoIniziale', event)">
+          <div class="budget-cell-label">Saldo iniziale <span class="budget-cell-edit-icon">✏️</span></div>
+          <div id="budgetInitial" class="budget-cell-value">—</div>
         </div>
         <div class="budget-cell editable" onclick="editBudgetField('risparmio', event)">
           <div class="budget-cell-label">Risparmio mensile <span class="budget-cell-edit-icon">✏️</span></div>
@@ -1442,20 +1449,39 @@ function calcBudgetSuggerito() {
   return { saldo, upcoming, risparmio, soglia, spendibile, daysLeft, endOfMonth: ymd(endOfMonth) };
 }
 
+function editCurrentBalancePrompt() {
+  const currentSaldo = calcSaldo();
+  const netMovimenti = currentSaldo - (state.saldoIniziale || 0);
+  const raw = prompt(
+    'Inserisci il tuo Saldo Attuale reale (€):\n(Il saldo iniziale verrà ricalcolato automaticamente in base ai movimenti già registrati)',
+    currentSaldo.toFixed(2)
+  );
+  if (raw === null) return;
+  const targetSaldo = parseFloat(String(raw).replace(',', '.'));
+  if (!isFinite(targetSaldo)) {
+    showToast('Importo non valido', true);
+    return;
+  }
+  state.saldoIniziale = Number((targetSaldo - netMovimenti).toFixed(2));
+  saveState();
+}
+
 function editBudgetField(field, ev) {
   if (ev) ev.stopPropagation();
   const cell = ev.currentTarget;
   const valueEl = cell.querySelector('.budget-cell-value');
   if (cell.querySelector('input.inline-edit')) return;
 
-  const current = field === 'risparmio'
-    ? (state.budget?.risparmioMensile || 0)
-    : (state.budget?.sogliaMinima || 0);
+  const current = field === 'saldoIniziale'
+    ? (state.saldoIniziale || 0)
+    : field === 'risparmio'
+      ? (state.budget?.risparmioMensile || 0)
+      : (state.budget?.sogliaMinima || 0);
 
   const input = document.createElement('input');
   input.type = 'number';
   input.step = '0.01';
-  input.min = '0';
+  if (field !== 'saldoIniziale') input.min = '0';
   input.inputMode = 'decimal';
   input.className = 'inline-edit';
   input.value = current;
@@ -1465,11 +1491,15 @@ function editBudgetField(field, ev) {
   setTimeout(() => { input.focus(); input.select(); }, 30);
 
   const commit = () => {
-    const val = parseFloat(input.value);
-    const safe = isFinite(val) && val >= 0 ? val : 0;
-    if (!state.budget) state.budget = { risparmioMensile: 0, sogliaMinima: 0 };
-    if (field === 'risparmio') state.budget.risparmioMensile = safe;
-    else state.budget.sogliaMinima = safe;
+    const val = parseFloat(String(input.value).replace(',', '.'));
+    if (field === 'saldoIniziale') {
+      state.saldoIniziale = isFinite(val) ? val : 0;
+    } else {
+      const safe = isFinite(val) && val >= 0 ? val : 0;
+      if (!state.budget) state.budget = { risparmioMensile: 0, sogliaMinima: 0 };
+      if (field === 'risparmio') state.budget.risparmioMensile = safe;
+      else state.budget.sogliaMinima = safe;
+    }
     saveState();
   };
   const cancel = () => {
@@ -1492,11 +1522,13 @@ function renderBudget() {
   const daily = document.getElementById('budgetDaily');
   const weekly = document.getElementById('budgetWeekly');
   const upc = document.getElementById('budgetUpcoming');
+  const initEl = document.getElementById('budgetInitial');
   const sav = document.getElementById('budgetSaving');
   const thr = document.getElementById('budgetThreshold');
 
   days.textContent = `${b.daysLeft} ${b.daysLeft === 1 ? 'giorno' : 'giorni'} a fine mese`;
   upc.textContent = fmt(b.upcoming);
+  if (initEl) initEl.textContent = fmt(state.saldoIniziale || 0);
   sav.textContent = fmt(b.risparmio);
   thr.textContent = fmt(b.soglia);
 
