@@ -542,7 +542,7 @@
       </div>
     </div>
     <div class="cloud-pill-bar">
-      <button class="pill-btn synced" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Estratto Conto</button>
+      <button class="pill-btn synced" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Movimenti</button>
       <button id="btnICloudShare" class="pill-btn primary" onclick="saveToFileWithPicker()">📁 Salva su File</button>
       <button class="pill-btn" onclick="document.getElementById('importFileTop').click()">📂 Apri File</button>
       <button id="btnSyncReload" class="pill-btn hidden" onclick="reloadFromFile()">🔄 Ricarica dal file</button>
@@ -662,20 +662,20 @@
     <div class="panel" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(56, 189, 248, 0.12)); border-color: rgba(16, 185, 129, 0.4); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
       <div>
         <div style="font-size: 15px; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px;">
-          <span>🏦 Importa Estratto Conto Bancario</span>
+          <span>🏦 Importa Movimenti (Lista Movimenti / Estratto Conto)</span>
           <span class="badge badge-income">PDF · Excel · CSV</span>
         </div>
         <div class="subtitle" style="margin-top: 3px;">
           Riconosce in automatico spese, addebiti POS/SDD, stipendi (emolumenti), bonifici e accrediti con anteprima di controllo.
         </div>
       </div>
-      <button type="button" class="btn btn-success" onclick="document.getElementById('stmtFileInput').click()">📄 Scegli file estratto conto…</button>
+      <button type="button" class="btn btn-success" onclick="document.getElementById('stmtFileInput').click()">📄 Scegli file movimenti…</button>
     </div>
 
     <div class="panel" id="panelAddMovimento">
       <div class="panel-title">
         <span>Nuovo movimento manuale</span>
-        <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Estratto Conto</button>
+        <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Movimenti</button>
       </div>
       <form id="formMovimento">
         <div>
@@ -941,12 +941,12 @@
     </div>
 
     <div class="panel">
-      <h3 class="panel-title">📁 Salvataggio su File, Estratto Conto & Backup</h3>
+      <h3 class="panel-title">📁 Salvataggio su File, Importa Movimenti &amp; Backup</h3>
       <div class="subtitle" style="margin-bottom:14px;">
-        Premi <strong>"Salva su File"</strong> per scegliere la cartella di destinazione (es. nell'app <em>File</em> su iPhone/iPad o in una cartella sul Mac) e salvare il tuo file <code>saldo-dati.json</code>, oppure importa un estratto conto bancario.
+        Premi <strong>"Salva su File"</strong> per scegliere la cartella di destinazione (es. nell'app <em>File</em> su iPhone/iPad o in una cartella sul Mac) e salvare il tuo file <code>saldo-dati.json</code>, oppure importa un file di movimenti bancari (PDF, Excel o CSV).
       </div>
       <div class="actions-row">
-        <button class="btn btn-success" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Estratto Conto (PDF / Excel / CSV)</button>
+        <button class="btn btn-success" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Movimenti (PDF / Excel / CSV)</button>
         <button class="btn btn-primary" onclick="saveToFileWithPicker()">📁 Salva su File</button>
         <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Apri File</button>
         <button class="btn btn-secondary" onclick="exportData()">📥 Scarica Backup JSON</button>
@@ -960,12 +960,12 @@
 <!-- FLOATING QUICK-ADD BUTTON ON MOBILE -->
 <button class="fab-add" onclick="quickJumpToAdd()" title="Aggiungi movimento">+</button>
 
-<!-- DIALOG ANTEPRIMA IMPORTAZIONE ESTRATTO CONTO -->
+<!-- DIALOG ANTEPRIMA IMPORTAZIONE MOVIMENTI -->
 <dialog id="stmtDialog" class="stmt-dialog">
   <div class="stmt-modal-wrap">
     <div class="stmt-modal-head">
       <div>
-        <h3 style="margin:0; font-size:18px;">🏦 Anteprima Importazione Estratto Conto <span class="badge" style="font-size:11px; vertical-align:middle; margin-left:6px;">v11</span></h3>
+        <h3 style="margin:0; font-size:18px;">🏦 Anteprima Importazione Movimenti <span class="badge" style="font-size:11px; vertical-align:middle; margin-left:6px;">v12</span></h3>
         <div id="stmtSummarySub" class="subtitle" style="margin-top:4px;">Verifica, modifica la categoria o segna come ricorrenti i movimenti rilevati.</div>
       </div>
       <button class="btn btn-secondary btn-small" onclick="closeStmtDialog()">✕ Chiudi</button>
@@ -3146,7 +3146,7 @@ async function handleStatementFile(ev) {
   ev.target.value = '';
 
   const name = file.name.toLowerCase();
-  showToast('Analisi estratto conto in corso…');
+  showToast('Analisi movimenti in corso…');
 
   try {
     let rows = [];
