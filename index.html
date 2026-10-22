@@ -538,13 +538,13 @@
       <div class="brand-logo">💰</div>
       <div>
         <h1>Saldo e Movimenti</h1>
-        <div class="subtitle" id="syncStatus">📁 Salvato sul dispositivo · Premi "Salva su File" per scegliere la cartella</div>
+        <div class="subtitle" id="syncStatus">📂 Cartella File: Dispositivo locale · Premi "Salva su File" per scegliere la cartella</div>
       </div>
     </div>
     <div class="cloud-pill-bar">
       <button class="pill-btn synced" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Movimenti</button>
       <button id="btnICloudShare" class="pill-btn primary" onclick="saveToFileWithPicker()">📁 Salva su File</button>
-      <button class="pill-btn" onclick="document.getElementById('importFileTop').click()">📂 Apri File</button>
+      <button class="pill-btn" onclick="openExistingSyncFilePicker()">📂 Apri da cartella File</button>
       <button id="btnSyncReload" class="pill-btn hidden" onclick="reloadFromFile()">🔄 Ricarica dal file</button>
       <button id="btnSyncDisconnect" class="pill-btn hidden" onclick="disconnectSyncFile()">✕ Scollega file</button>
       <input type="file" id="importFileTop" accept=".json,application/json" class="hidden" onchange="importData(event)">
@@ -942,13 +942,16 @@
 
     <div class="panel">
       <h3 class="panel-title">📁 Salvataggio su File, Importa Movimenti &amp; Backup</h3>
-      <div class="subtitle" style="margin-bottom:14px;">
-        Premi <strong>"Salva su File"</strong> per scegliere la cartella di destinazione (es. nell'app <em>File</em> su iPhone/iPad o in una cartella sul Mac) e salvare il tuo file <code>saldo-dati.json</code>, oppure importa un file di movimenti bancari (PDF, Excel o CSV).
+      <div class="subtitle" style="margin-bottom:10px;">
+        Premi <strong>"Salva su File"</strong> per scegliere la cartella di destinazione nell'app <strong>File</strong> (su iPhone/iPad: <em>iCloud Drive</em> o <em>Su iPhone</em>) oppure nel <strong>Finder</strong> (su Mac), o importa un file di movimenti bancari (PDF, Excel o CSV).
+      </div>
+      <div id="settingsSyncPathBox" style="margin-bottom:14px; padding:10px 14px; background:rgba(7,11,20,0.65); border:1px solid var(--border); border-radius:10px; font-size:13px;">
+        📂 Cartella attiva: <strong>Dispositivo locale</strong>
       </div>
       <div class="actions-row">
         <button class="btn btn-success" onclick="document.getElementById('stmtFileInput').click()">🏦 Importa Movimenti (PDF / Excel / CSV)</button>
-        <button class="btn btn-primary" onclick="saveToFileWithPicker()">📁 Salva su File</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📂 Apri File</button>
+        <button class="btn btn-primary" onclick="saveToFileWithPicker()">📁 Salva su File (Scegli cartella)</button>
+        <button class="btn btn-secondary" onclick="openExistingSyncFilePicker()">📂 Apri da cartella File</button>
         <button class="btn btn-secondary" onclick="exportData()">📥 Scarica Backup JSON</button>
         <input type="file" id="importFile" accept=".json,application/json" class="hidden" onchange="importData(event)">
         <button class="btn btn-danger" onclick="resetData()">🗑 Cancella tutto</button>
@@ -960,12 +963,69 @@
 <!-- FLOATING QUICK-ADD BUTTON ON MOBILE -->
 <button class="fab-add" onclick="quickJumpToAdd()" title="Aggiungi movimento">+</button>
 
+<!-- DIALOG SALVA SU FILE (SCEGLI CARTELLA iOS / macOS) -->
+<dialog id="saveFileDialog" class="stmt-dialog">
+  <div class="stmt-modal-wrap" style="max-width:560px;">
+    <div class="stmt-modal-head">
+      <div>
+        <h3 style="margin:0; font-size:18px;">📁 Salva su File — Scegli Cartella</h3>
+        <div class="subtitle" style="margin-top:4px;">Salva o collega il tuo file dati nella cartella dell'app <strong>File</strong> (iOS/iPadOS) o del <strong>Finder</strong> (macOS).</div>
+      </div>
+      <button class="btn btn-secondary btn-small" onclick="closeSaveFileDialog()">✕ Chiudi</button>
+    </div>
+    <div class="stmt-modal-body" style="display:flex; flex-direction:column; gap:14px;">
+      <div id="saveDialogCurrentPath" style="padding:12px 14px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.35); border-radius:12px; font-size:13px; line-height:1.5;">
+        📂 <strong>Cartella File:</strong> App "File" › saldo-dati.json
+      </div>
+
+      <div>
+        <label style="display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:6px; text-transform:uppercase;">Nome del file da salvare nella cartella File</label>
+        <input type="text" id="saveFileNameInput" value="saldo-dati.json" style="width:100%;">
+      </div>
+
+      <div id="saveDialogIOSBox" class="hidden" style="display:flex; flex-direction:column; gap:10px; padding:14px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.3); border-radius:12px;">
+        <div style="font-size:14px; font-weight:700; color:#fff;">📱 iPhone / iPad — Salva nell'App "File"</div>
+        <div style="font-size:13px; color:var(--muted); line-height:1.45;">
+          <strong>Opzione 1 (Scegli cartella):</strong> Premi il pulsante qui sotto e nel pannello iOS che si apre tocca <strong>«Salva su File 📁»</strong> per scegliere la cartella esatta (es. <em>iCloud Drive</em> o <em>Su iPhone</em>).
+        </div>
+        <button type="button" class="btn btn-primary" style="width:100%; justify-content:center;" onclick="triggerIOSSaveToFilesSheet()">
+          📂 Apri selettore cartella "Salva su File"…
+        </button>
+        <div style="font-size:13px; color:var(--muted); line-height:1.45; margin-top:4px;">
+          <strong>Opzione 2 (Salvataggio diretto):</strong> Salva subito nella cartella <strong>App "File" › Download</strong>:
+        </div>
+        <button type="button" class="btn btn-success" style="width:100%; justify-content:center;" onclick="triggerDirectFolderDownload('App File › Download')">
+          📥 Salva direttamente in App "File" › Download
+        </button>
+      </div>
+
+      <div id="saveDialogMacBox" style="display:flex; flex-direction:column; gap:10px; padding:14px; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.3); border-radius:12px;">
+        <div style="font-size:14px; font-weight:700; color:#fff;">💻 macOS — Salva in una Cartella del Mac (Finder / iCloud Drive)</div>
+        <button type="button" id="btnMacNativePicker" class="btn btn-primary hidden" style="width:100%; justify-content:center;" onclick="triggerMacNativeFilePicker()">
+          📂 Scegli cartella nel Finder (Sincronizzazione automatica)…
+        </button>
+        <button type="button" class="btn btn-primary" style="width:100%; justify-content:center;" onclick="triggerDirectFolderDownload('Cartella File (Finder › Download)')">
+          📂 Salva nella cartella File / Download del Mac
+        </button>
+        <div style="font-size:12px; color:var(--muted); line-height:1.45;">
+          💡 <em>Suggerimento per Safari su Mac:</em> se in <strong>Safari → Impostazioni → Generali → Posizione download file</strong> selezioni <strong>"Chiedi per ogni download"</strong>, Safari aprirà sempre la finestra del Finder per farti scegliere qualsiasi cartella (es. <em>Documenti</em>, <em>iCloud Drive</em> o <em>Scrivania</em>).
+        </div>
+      </div>
+
+      <div style="padding-top:6px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <span style="font-size:13px; color:var(--muted);">Hai già un file salvato in una cartella?</span>
+        <button type="button" class="btn btn-secondary btn-small" onclick="closeSaveFileDialog(); openExistingSyncFilePicker();">📂 Apri file esistente da cartella…</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
 <!-- DIALOG ANTEPRIMA IMPORTAZIONE MOVIMENTI -->
 <dialog id="stmtDialog" class="stmt-dialog">
   <div class="stmt-modal-wrap">
     <div class="stmt-modal-head">
       <div>
-        <h3 style="margin:0; font-size:18px;">🏦 Anteprima Importazione Movimenti <span class="badge" style="font-size:11px; vertical-align:middle; margin-left:6px;">v12</span></h3>
+        <h3 style="margin:0; font-size:18px;">🏦 Anteprima Importazione Movimenti <span class="badge" style="font-size:11px; vertical-align:middle; margin-left:6px;">v13</span></h3>
         <div id="stmtSummarySub" class="subtitle" style="margin-top:4px;">Verifica, modifica la categoria o segna come ricorrenti i movimenti rilevati.</div>
       </div>
       <button class="btn btn-secondary btn-small" onclick="closeStmtDialog()">✕ Chiudi</button>
@@ -1139,14 +1199,98 @@ async function idbClearHandle() {
   });
 }
 
-// Fa scegliere il percorso all'utente:
-// 1) Se il browser supporta showSaveFilePicker (macOS/desktop), apre direttamente il selettore di cartella/percorso e collega il file.
-// 2) Su iOS/iPadOS apre il selettore nativo di iOS ("Salva su File") che permette di scegliere la cartella nell'app File.
-async function saveToFileWithPicker() {
-  const payload = { _format: 'saldo-sync-v1', updatedAt: new Date().toISOString(), data: state };
-  const jsonStr = JSON.stringify(payload, null, 2);
-  const fileName = 'saldo-dati.json';
+const LAST_FILE_META_KEY = 'saldo_last_saved_file_meta_v1';
 
+function isIOSDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function getLastSavedFileMeta() {
+  try {
+    const raw = localStorage.getItem(LAST_FILE_META_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function setLastSavedFileMeta(folder, fileName) {
+  try {
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    const meta = {
+      folder: folder || (isIOSDevice() ? 'App "File" (iCloud Drive / Su iPhone)' : 'Cartella File (Finder)'),
+      fileName: fileName || 'saldo-dati.json',
+      savedAt: `${hh}:${mm}`
+    };
+    localStorage.setItem(LAST_FILE_META_KEY, JSON.stringify(meta));
+  } catch (e) {}
+  renderSyncStatus();
+}
+
+function getSanitizedSaveFileName() {
+  const inp = document.getElementById('saveFileNameInput');
+  let name = (inp && inp.value ? inp.value.trim() : '') || 'saldo-dati.json';
+  if (!name.toLowerCase().endsWith('.json')) name += '.json';
+  return name;
+}
+
+function closeSaveFileDialog() {
+  const dlg = document.getElementById('saveFileDialog');
+  if (dlg && dlg.open) dlg.close();
+}
+
+// Apre il selettore cartella / finestra "Salva su File" mostrando chiaramente la cartella File su iOS e macOS
+async function saveToFileWithPicker() {
+  const dlg = document.getElementById('saveFileDialog');
+  const iosBox = document.getElementById('saveDialogIOSBox');
+  const macBox = document.getElementById('saveDialogMacBox');
+  const macNativeBtn = document.getElementById('btnMacNativePicker');
+  const pathBox = document.getElementById('saveDialogCurrentPath');
+  const nameInp = document.getElementById('saveFileNameInput');
+
+  const meta = getLastSavedFileMeta();
+  const defaultFolder = isIOSDevice()
+    ? 'App "File" › iCloud Drive / Su iPhone'
+    : 'Cartella File (Finder › Documenti / Download)';
+  const currentFolder = fileHandle
+    ? 'Cartella File (Sincronizzazione automatica attiva)'
+    : (meta && meta.folder ? meta.folder : defaultFolder);
+  const currentFile = fileHandle
+    ? (fileHandle.name || 'saldo-dati.json')
+    : (meta && meta.fileName ? meta.fileName : 'saldo-dati.json');
+
+  if (nameInp) nameInp.value = currentFile;
+  if (pathBox) {
+    pathBox.innerHTML = `📂 <strong>Cartella attiva:</strong> ${escapeHtml(currentFolder)} › <strong>${escapeHtml(currentFile)}</strong>`;
+  }
+
+  if (isIOSDevice()) {
+    if (iosBox) iosBox.classList.remove('hidden');
+    if (macBox) macBox.classList.add('hidden');
+  } else {
+    if (iosBox) iosBox.classList.add('hidden');
+    if (macBox) macBox.classList.remove('hidden');
+    if (macNativeBtn) {
+      if (typeof window.showSaveFilePicker === 'function') {
+        macNativeBtn.classList.remove('hidden');
+      } else {
+        macNativeBtn.classList.add('hidden');
+      }
+    }
+  }
+
+  if (dlg && typeof dlg.showModal === 'function') {
+    dlg.showModal();
+  } else {
+    await triggerDirectFolderDownload(defaultFolder);
+  }
+}
+
+async function triggerMacNativeFilePicker() {
+  const fileName = getSanitizedSaveFileName();
   if (typeof window.showSaveFilePicker === 'function') {
     try {
       const handle = await window.showSaveFilePicker({
@@ -1156,14 +1300,21 @@ async function saveToFileWithPicker() {
       fileHandle = handle;
       await idbSetHandle(handle);
       await writeToFileHandle();
-      renderSyncStatus();
-      showToast(`Salvato in ${handle.name} ✓`);
+      setLastSavedFileMeta('Cartella File (Finder)', handle.name || fileName);
+      closeSaveFileDialog();
+      showToast(`Salvato in Cartella File › ${handle.name || fileName} ✓`);
       return;
     } catch (e) {
       if (e && e.name === 'AbortError') return;
     }
   }
+  await triggerDirectFolderDownload('Cartella File (Finder › Download)');
+}
 
+async function triggerIOSSaveToFilesSheet() {
+  const fileName = getSanitizedSaveFileName();
+  const payload = { _format: 'saldo-sync-v1', updatedAt: new Date().toISOString(), data: state };
+  const jsonStr = JSON.stringify(payload, null, 2);
   try {
     const file = new File([jsonStr], fileName, { type: 'application/json' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -1171,14 +1322,63 @@ async function saveToFileWithPicker() {
         files: [file],
         title: fileName
       });
-      showToast('File salvato ✓');
+      setLastSavedFileMeta('App "File" (iCloud Drive / Su iPhone)', fileName);
+      closeSaveFileDialog();
+      showToast(`Salvato in App "File" › ${fileName} ✓`);
       return;
     }
   } catch (e) {
     if (e && e.name === 'AbortError') return;
   }
+  await triggerDirectFolderDownload('App "File" › Download');
+}
 
-  exportData();
+async function triggerDirectFolderDownload(folderLabel) {
+  const fileName = getSanitizedSaveFileName();
+  const payload = { _format: 'saldo-sync-v1', updatedAt: new Date().toISOString(), data: state };
+  const jsonStr = JSON.stringify(payload, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => a.remove(), 300);
+
+  const label = folderLabel || (isIOSDevice() ? 'App "File" › Download' : 'Cartella File (Finder › Download)');
+  setLastSavedFileMeta(label, fileName);
+  closeSaveFileDialog();
+  showToast(`Salvato in ${label} › ${fileName} ✓`);
+}
+
+async function openExistingSyncFilePicker() {
+  if (typeof window.showOpenFilePicker === 'function') {
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        multiple: false,
+        types: [{ description: 'File JSON Saldo', accept: { 'application/json': ['.json'] } }]
+      });
+      if (handle) {
+        fileHandle = handle;
+        await idbSetHandle(handle);
+        const data = await readFromFileHandle();
+        if (data) {
+          state = Object.assign(emptyState(), data);
+          state.budget = Object.assign(emptyState().budget, data.budget || {});
+          state.promemoria = Object.assign(emptyState().promemoria, data.promemoria || {});
+          migrateCategories();
+          saveState({ silent: true });
+        }
+        setLastSavedFileMeta('Cartella File (Finder)', handle.name || 'saldo-dati.json');
+        showToast(`Collegato a Cartella File › ${handle.name} ✓`);
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;
+    }
+  }
+  const inp = document.getElementById('importFileTop');
+  if (inp) inp.click();
 }
 
 async function ensurePermission(handle, mode) {
@@ -1216,6 +1416,7 @@ async function readFromFileHandle() {
 async function disconnectSyncFile() {
   if (!confirm('Scollegare il file selezionato?')) return;
   fileHandle = null;
+  localStorage.removeItem(LAST_FILE_META_KEY);
   await idbClearHandle();
   renderSyncStatus();
 }
@@ -1234,14 +1435,29 @@ async function reloadFromFile() {
 
 function renderSyncStatus() {
   const el = document.getElementById('syncStatus');
+  const settingsBox = document.getElementById('settingsSyncPathBox');
   const btnRel = document.getElementById('btnSyncReload');
   const btnDis = document.getElementById('btnSyncDisconnect');
+  const meta = getLastSavedFileMeta();
+  const defaultFolder = isIOSDevice() ? 'App "File" (iPhone / iPad)' : 'Cartella File (Mac)';
+
   if (fileHandle) {
-    el.innerHTML = `✅ Collegato al file <strong>${escapeHtml(fileHandle.name || 'saldo-dati.json')}</strong> (salvataggio automatico)`;
+    const fname = escapeHtml(fileHandle.name || 'saldo-dati.json');
+    if (el) el.innerHTML = `✅ <strong>Cartella File (Finder) › ${fname}</strong> · salvataggio automatico attivo`;
+    if (settingsBox) settingsBox.innerHTML = `📂 Cartella attiva: <strong style="color:var(--green);">Cartella File (Finder) › ${fname}</strong> (sincronizzazione automatica)`;
     if (btnRel) btnRel.classList.remove('hidden');
     if (btnDis) btnDis.classList.remove('hidden');
+  } else if (meta && meta.fileName) {
+    const folder = escapeHtml(meta.folder || defaultFolder);
+    const fname = escapeHtml(meta.fileName);
+    const timeStr = meta.savedAt ? ` (aggiornato alle ${escapeHtml(meta.savedAt)})` : '';
+    if (el) el.innerHTML = `📂 <strong>${folder} › ${fname}</strong>${timeStr} · Premi "Salva su File" per aggiornare o cambiare cartella`;
+    if (settingsBox) settingsBox.innerHTML = `📂 Cartella attiva: <strong style="color:var(--green);">${folder} › ${fname}</strong>${timeStr}`;
+    if (btnRel) btnRel.classList.add('hidden');
+    if (btnDis) btnDis.classList.remove('hidden');
   } else {
-    el.innerHTML = `📁 Salvato sul dispositivo · Usa "Salva su File" per scegliere dove salvare`;
+    if (el) el.innerHTML = `📂 <strong>${defaultFolder}</strong> · Premi <strong>"📁 Salva su File"</strong> per scegliere la cartella`;
+    if (settingsBox) settingsBox.innerHTML = `📂 Cartella attiva: <strong>${defaultFolder}</strong> — Premi "Salva su File" per scegliere la cartella`;
     if (btnRel) btnRel.classList.add('hidden');
     if (btnDis) btnDis.classList.add('hidden');
   }
@@ -2158,7 +2374,9 @@ function importData(e) {
       state.promemoria = Object.assign(emptyState().promemoria, data.promemoria || {});
       migrateCategories();
       saveState();
-      showToast('Dati importati ✓');
+      const folder = isIOSDevice() ? 'App "File" (iCloud Drive / Su iPhone)' : 'Cartella File (Finder)';
+      setLastSavedFileMeta(folder, file.name || 'saldo-dati.json');
+      showToast(`Caricato da ${folder} › ${file.name} ✓`);
     } catch (err) {
       alert('File non valido: ' + err.message);
     }
