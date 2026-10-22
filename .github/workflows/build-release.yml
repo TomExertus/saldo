@@ -57,6 +57,7 @@ jobs:
         working-directory: ./windows/electron
         run: |
           npm install
+          node sync-www.js
           npm run build:win
 
       - name: Collect Windows Executables

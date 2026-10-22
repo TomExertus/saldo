@@ -10,6 +10,7 @@
     "prestart": "node sync-www.js",
     "start": "electron .",
     "prebuild": "node sync-www.js",
+    "prebuild:win": "node sync-www.js",
     "build:win": "electron-builder --win nsis portable"
   },
   "devDependencies": {
