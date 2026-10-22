@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const srcDir = path.resolve(__dirname, '../../www');
+const webDir = path.resolve(__dirname, '../../web');
+const wwwDir = path.resolve(__dirname, '../../www');
+const srcDir = fs.existsSync(webDir) ? webDir : wwwDir;
 const destDir = path.resolve(__dirname, './www');
 
 fs.mkdirSync(destDir, { recursive: true });

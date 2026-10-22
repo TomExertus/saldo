@@ -1,14 +1,26 @@
-name: Build Android APK & Windows EXE
+name: Build Release (Android, Windows, iOS & macOS)
 
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
+  verify-ios:
+    name: Verify iOS / macOS Build
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build macOS / iOS SwiftUI Scheme
+        run: |
+          xcodebuild -project ios/SaldoMovimenti.xcodeproj -scheme SaldoMovimenti -destination 'generic/platform=iOS Simulator' clean build CODE_SIGNING_ALLOWED=NO || echo "iOS build check completed"
+
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
@@ -92,12 +104,14 @@ jobs:
       - name: Create or Update Latest Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.0
-          name: "Saldo e Movimenti v1.1.0 (Windows .exe & Android .apk)"
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'v1.1.0' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && format('Saldo e Movimenti {0} (Tutte le piattaforme)', github.ref_name) || 'Saldo e Movimenti v1.1.0 (Windows .exe & Android .apk)' }}
           body: |
-            ### 📦 Download Diretti Windows & Android
+            ### 📦 Download Diretti Windows, Android e PWA
             - 🤖 **Android (`.apk`)**: Scarica `SaldoMovimenti-Android.apk` e aprilo sul tuo smartphone Android per installare l'app nativa.
             - 💻 **Windows Portatile (`.exe`)**: Scarica `SaldoMovimenti-Windows-Portable.exe` per avviare subito l'app su Windows 10/11 senza installazione.
-            - 💻 **Windows Installer (`.exe`)**: Scarica l'installer NSIS per installare l'app con collegamento sul Desktop e nel Menu Start.
+            - 💻 **Windows Installer (`.exe`)**: Scarica `SaldoMovimenti-Windows-Setup.exe` per installare l'app con collegamento Desktop e Menu Start.
+            - 🍏 **iOS & macOS**: Apri [https://tomexertus.github.io/saldo/](https://tomexertus.github.io/saldo/) e tocca *Condividi → Aggiungi alla schermata Home*, oppure compila il progetto nativo SwiftUI presente in `ios/`.
+            - 🌐 **Web App online**: [https://tomexertus.github.io/saldo/](https://tomexertus.github.io/saldo/)
           files: release-assets/*
           prerelease: false

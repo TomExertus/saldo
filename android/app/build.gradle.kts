@@ -35,7 +35,7 @@ android {
 }
 
 val syncWebAssets by tasks.registering(Copy::class) {
-    from("../../www")
+    from(if (file("../../web").exists()) "../../web" else "../../www")
     into("src/main/assets/www")
 }
 

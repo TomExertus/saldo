@@ -19,7 +19,9 @@ function createWindow() {
   });
 
   const localIndex = path.join(__dirname, 'www', 'index.html');
-  const fallbackIndex = path.join(__dirname, '..', '..', 'www', 'index.html');
+  const webIndex = path.join(__dirname, '..', '..', 'web', 'index.html');
+  const wwwIndex = path.join(__dirname, '..', '..', 'www', 'index.html');
+  const fallbackIndex = fs.existsSync(webIndex) ? webIndex : wwwIndex;
   win.loadFile(fs.existsSync(localIndex) ? localIndex : fallbackIndex);
 
   win.webContents.setWindowOpenHandler(({ url }) => {

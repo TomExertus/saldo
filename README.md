@@ -1,32 +1,107 @@
-# 💰 Saldo e Movimenti — Edizione Windows & Android
+# 💰 Saldo e Movimenti — Monorepo Multipiattaforma
 
-Versione multipiattaforma per **Windows 10/11** e **Android** dell'app **Saldo e Movimenti**, completa di:
-- **Saldo attuale** modificabile con un clic e ricalcolo automatico
-- **Budget consigliato** fino a fine mese (giornaliero, settimanale, spese fisse residue)
-- **🏦 Importatore Estratto Conto Bancario (PDF, Excel `.xlsx`/`.xls`, CSV/TSV)** con separazione intelligente multi-operazione, riconoscimento automatico di uscite/entrate/emolumenti e categorizzazione automatica
-- **📁 Salva su File / 📂 Apri File** con selettore nativo di cartella/percorso su Windows e Android
-- **🔔 Promemoria & Scadenze** con notifiche native Windows e Android ed esportazione calendario `.ics`
+[![Deploy to GitHub Pages](https://github.com/TomExertus/saldo/actions/workflows/pages.yml/badge.svg)](https://github.com/TomExertus/saldo/actions/workflows/pages.yml)
+[![Build Release](https://github.com/TomExertus/saldo/actions/workflows/build-release.yml/badge.svg)](https://github.com/TomExertus/saldo/actions/workflows/build-release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/TomExertus/saldo?label=Release&color=success)](https://github.com/TomExertus/saldo/releases/latest)
 
----
-
-## 📥 Come scaricare e installare su Windows e Android
-
-### 1️⃣ Scarica i pacchetti nativi (`.apk` e `.exe`)
-Dalla sezione **[Releases](https://github.com/TomExertus/saldo-win-android/releases/latest)** di questa repository puoi scaricare direttamente:
-- 🤖 **`SaldoMovimenti-Android.apk`**: installabile su qualsiasi smartphone o tablet Android (Android 8.0+).
-- 💻 **`SaldoMovimenti-Windows-Portable.exe`**: versione portatile per Windows 10/11 (doppio clic per avviare, senza installazione).
-- 💻 **`SaldoMovimenti-Windows-nsis.exe`**: programma di installazione per Windows con icona sul Desktop e nel Menu Start.
-
-### 2️⃣ Oppure installa come App Web (PWA) in 1 clic
-Apri il link **[https://tomexertus.github.io/saldo-win-android/](https://tomexertus.github.io/saldo-win-android/)**:
-- **Su Android (Chrome)**: premi il pulsante **"⚡ Installa App ora"** nel banner in alto (oppure Menu `⋮` → **Installa app**).
-- **Su Windows (Edge / Chrome)**: clicca sull'icona **"Installa app"** nella barra degli indirizzi (o premi **"⚡ Installa App ora"**) per averla sul Desktop e nella barra delle applicazioni come app nativa.
+Suite unificata per la gestione intelligente delle finanze personali su tutte le piattaforme:
+- 🍏 **iOS & macOS**: App nativa SwiftUI (`ios/`) + PWA ottimizzata con selettore cartella File / iCloud Drive
+- 🤖 **Android**: App nativa Kotlin (`android/`) + PWA installabile con notifiche push e Storage Access Framework
+- 💻 **Windows**: App Desktop Electron (`windows/`) con pacchetti `.exe` (Installer NSIS & Portable) e launcher `.bat`
+- 🌐 **Web**: PWA installabile e funzionante al 100% offline su [https://tomexertus.github.io/saldo/](https://tomexertus.github.io/saldo/)
 
 ---
 
-## 🛠️ Struttura del Progetto
-- `android/` — Progetto nativo **Android (Kotlin + AndroidX WebView + Storage Access Framework + NotificationManager)** apribile in Android Studio.
-- `windows/electron/` — Progetto **Windows Desktop (Electron + electron-builder)** con dialoghi nativi di salvataggio file (`Salva su File`) e notifiche Toast di Windows.
-- `windows/Avvia-Saldo-Movimenti-Windows.bat` — Launcher istantaneo per Windows 10/11 senza bisogno di installare nulla.
-- `www/` — Core dell'applicazione condiviso con bridge nativi `window.AndroidBridge` e `window.WindowsBridge`.
-- `.github/workflows/build-release.yml` — Pipeline GitHub Actions che compila automaticamente `.apk` e `.exe` e li pubblica nelle Releases.
+## 📱 Versioni per Piattaforma
+
+| Piattaforma | Componente | Versione Corrente | Formato Distribuzione |
+| :--- | :--- | :---: | :--- |
+| **🌐 Web / PWA** | `web/` & root | **v14 (v1.1.0)** | Online su GitHub Pages ([Apri](https://tomexertus.github.io/saldo/)) |
+| **🤖 Android** | `android/` | **v1.1.0 (code 11)** | Pacchetto APK `SaldoMovimenti-Android.apk` ([Releases](https://github.com/TomExertus/saldo/releases/latest)) |
+| **💻 Windows** | `windows/electron/` | **v1.1.0** | `SaldoMovimenti-Windows-Portable.exe` & `Setup.exe` ([Releases](https://github.com/TomExertus/saldo/releases/latest)) |
+| **🍏 iOS / macOS** | `ios/` | **v1.1.0 (build 14)** | Progetto Xcode SwiftUI (`ios/SaldoMovimenti.xcodeproj`) |
+
+---
+
+## 📦 Download Diretti
+
+Dalla sezione **[GitHub Releases](https://github.com/TomExertus/saldo/releases/latest)**:
+- 🤖 **Android APK**: [`SaldoMovimenti-Android.apk`](https://github.com/TomExertus/saldo/releases/latest) (installa direttamente su smartphone o tablet Android 8.0+)
+- 💻 **Windows Portable**: [`SaldoMovimenti-Windows-Portable.exe`](https://github.com/TomExertus/saldo/releases/latest) (avvio immediato senza installazione)
+- 💻 **Windows Setup**: [`SaldoMovimenti-Windows-Setup.exe`](https://github.com/TomExertus/saldo/releases/latest) (installer con scorciatoie Desktop e Menu Start)
+- 🍏 **iOS & macOS**: Apri [https://tomexertus.github.io/saldo/](https://tomexertus.github.io/saldo/) da Safari e tocca **Condividi (⬆️) → Aggiungi alla schermata Home**
+
+---
+
+## 🏛️ Architettura del Monorepo
+
+```
+saldo/
+├── .github/
+│   └── workflows/
+│       ├── pages.yml               # Deploy continuo della PWA su GitHub Pages
+│       └── build-release.yml       # Build automatica Android APK, Windows EXE e verifica iOS
+├── android/                        # Progetto nativo Android (Kotlin, Gradle 8.5, SDK 34)
+│   ├── app/
+│   │   ├── build.gradle.kts
+│   │   └── src/main/java/com/tommasonguyen/saldomovimenti/MainActivity.kt
+│   ├── build.gradle.kts
+│   ├── gradle.properties
+│   └── settings.gradle.kts
+├── ios/                            # Progetto nativo iOS & macOS (SwiftUI, Xcode)
+│   ├── SaldoMovimenti.xcodeproj
+│   └── SaldoMovimenti/             # Sorgenti Swift (Models, SaldoStore, Views, NotificationManager)
+├── windows/                        # Progetto Desktop Windows
+│   ├── Avvia-Saldo-Movimenti-Windows.bat   # Avvio rapido Edge WebView2
+│   └── electron/                   # App Electron 29 con electron-builder (NSIS & Portable)
+│       ├── main.js
+│       ├── preload.js
+│       ├── package.json
+│       └── sync-www.js
+├── web/                            # Core PWA / Web Application
+│   ├── index.html                  # Dashboard completa (Saldo, Movimenti, Grafici, Parser Estratti Conto)
+│   ├── app.html                    # Alias per bypass cache
+│   ├── manifest.json               # Manifest PWA
+│   ├── sw.js                       # Service Worker con cache offline
+│   └── icon.svg                    # Icona vettoriale
+├── index.html                      # Entry point root per GitHub Pages
+├── app.html
+├── manifest.json
+├── sw.js
+└── icon.svg
+```
+
+---
+
+## ⚡ Caratteristiche Principali
+
+1. **💰 Saldo Attuale & Budget Intelligente**
+   - Modifica diretta del saldo con ricalcolo automatico del budget giornaliero e settimanale consigliato fino a fine mese.
+2. **🏦 Importazione Intelligente Estratti Conto (PDF, Excel `.xlsx`/`.xls`, CSV, TSV)**
+   - Riconoscimento multi-operazione e parsing geometrico avanzato per colonne dare/avere, stipendi e commissioni con categorizzazione automatica.
+3. **📁 Sincronizzazione Dati & Backup su File**
+   - Supporto per File System Access API (seleziona cartella o file iCloud Drive / locale), bridge nativo Android (SAF) e Electron (`dialog.showSaveDialog`).
+4. **🔔 Promemoria e Scadenze**
+   - Notifiche native locali su iOS, Android e Windows + esportazione calendario standard `.ics`.
+
+---
+
+## 🚀 Istruzioni di Build Locale
+
+### Android
+```bash
+cd android
+./gradlew assembleRelease
+# L'APK compilato si troverà in app/build/outputs/apk/release/app-release.apk
+```
+
+### Windows (Electron)
+```bash
+cd windows/electron
+npm install
+npm run build:win
+# Gli eseguibili .exe (Setup e Portable) si troveranno in dist/
+```
+
+### iOS / macOS (Xcode)
+Apri `ios/SaldoMovimenti.xcodeproj` con **Xcode 15+** e seleziona il target desiderato (iPhone, iPad o Mac).

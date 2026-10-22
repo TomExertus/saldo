@@ -1,6 +1,6 @@
 @echo off
 title Saldo e Movimenti - Avvio Rapido Windows
-set "APP_URL=file:///%~dp0..\www\index.html"
+set "APP_URL=file:///%~dp0..\web\index.html"
 set "APP_URL=%APP_URL:\=/%"
 
 where msedge >nul 2>nul
@@ -19,4 +19,4 @@ if exist "%ProgramFiles%\Microsoft\Edge\Application\msedge.exe" (
     exit /b 0
 )
 
-start "" "%~dp0..\www\index.html"
+start "" "%~dp0..\web\index.html"
