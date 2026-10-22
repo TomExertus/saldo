@@ -1,0 +1,20 @@
+{
+  "name": "Saldo e Movimenti",
+  "short_name": "Saldo",
+  "description": "Tieni traccia di entrate, uscite, spese ricorrenti, indefinite, promemoria e iCloud.",
+  "lang": "it-IT",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "name": "saldo-e-movimenti-windows",
+  "productName": "Saldo e Movimenti",
+  "version": "1.1.0",
+  "description": "App Desktop Windows per gestione Saldo, Movimenti, Scadenze e Importazione Estratto Conto (PDF/Excel/CSV)",
+  "main": "main.js",
+  "author": "Tommaso Nguyen",
+  "license": "MIT",
+  "scripts": {
+    "prestart": "node sync-www.js",
+    "start": "electron .",
+    "prebuild": "node sync-www.js",
+    "build:win": "electron-builder --win nsis portable"
+  },
+  "devDependencies": {
+    "electron": "^29.1.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.tommasonguyen.saldomovimenti",
+    "productName": "Saldo e Movimenti",
+    "files": [
+      "main.js",
+      "preload.js",
+      "www/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "artifactName": "SaldoMovimenti-Windows-${target}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Saldo e Movimenti"
+    },
+    "portable": {
+      "artifactName": "SaldoMovimenti-Windows-Portable.exe"
+    }
+  }
+}
