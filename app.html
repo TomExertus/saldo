@@ -643,10 +643,6 @@
       <span class="tab-icon">🔁</span>
       <span>Ricorrenti</span>
     </div>
-    <div class="tab" data-tab="indefinite">
-      <span class="tab-icon">♾️</span>
-      <span>Indefinite</span>
-    </div>
     <div class="tab" data-tab="promemoria">
       <span class="tab-icon">🔔</span>
       <span>Scadenze</span>
@@ -790,54 +786,6 @@
     <div class="panel">
       <h3 class="panel-title">Spese ed entrate ricorrenti attive</h3>
       <div id="ricorrentiTable"></div>
-    </div>
-  </div>
-
-  <!-- TAB: INDEFINITE -->
-  <div id="tab-indefinite" class="tab-content hidden">
-    <div class="panel">
-      <h3 class="panel-title">Nuova spesa a periodo indefinito</h3>
-      <div class="subtitle" style="margin-bottom:14px;">Conteggiata ogni mese fino a quando non decidi di chiuderla.</div>
-      <form id="formIndefinita">
-        <div>
-          <label>Tipo</label>
-          <input type="hidden" name="tipo" value="uscita">
-          <div class="segmented-tipo">
-            <button type="button" class="seg-btn active-uscita" onclick="setFormTipo(this, 'uscita')">− Uscita</button>
-            <button type="button" class="seg-btn" onclick="setFormTipo(this, 'entrata')">+ Entrata</button>
-          </div>
-        </div>
-        <div>
-          <label>Importo mensile (€)</label>
-          <input type="number" name="importo" step="0.01" min="0" inputmode="decimal" required placeholder="0,00">
-        </div>
-        <div>
-          <label>Data inizio</label>
-          <input type="date" name="dataInizio" required>
-        </div>
-        <div>
-          <label>Categoria</label>
-          <select name="categoria" data-cat-select required></select>
-        </div>
-        <div class="form-full">
-          <label>Descrizione</label>
-          <input type="text" name="descrizione" required placeholder="es. Affitto, Palestra…">
-        </div>
-        <div class="form-full">
-          <label class="checkbox-row">
-            <input type="checkbox" name="promemoriaAttivo" checked>
-            <span>🔔 Invia promemoria mensile prima dell'addebito</span>
-          </label>
-        </div>
-        <div class="form-full">
-          <button type="submit" class="btn btn-primary" style="width:100%">+ Aggiungi indefinita</button>
-        </div>
-      </form>
-    </div>
-
-    <div class="panel">
-      <h3 class="panel-title">Spese a periodo indefinito</h3>
-      <div id="indefiniteTable"></div>
     </div>
   </div>
 
@@ -1505,6 +1453,22 @@ async function loadState() {
       }
     }
   } catch (e) {}
+  if (Array.isArray(state.indefinite) && state.indefinite.length > 0) {
+    state.indefinite.forEach(ind => {
+      state.ricorrenti.push({
+        id: ind.id || uid(),
+        tipo: ind.tipo || 'uscita',
+        importo: ind.importo || 0,
+        frequenza: 'mensile',
+        dataInizio: ind.dataInizio || todayISO(),
+        dataFine: ind.attiva === false && ind.dataChiusura ? ind.dataChiusura : null,
+        categoria: ind.categoria || (ind.tipo === 'entrata' ? 'altro_e' : 'altro_u'),
+        descrizione: ind.descrizione || '',
+        promemoriaAttivo: ind.promemoriaAttivo !== false
+      });
+    });
+    state.indefinite = [];
+  }
   migrateCategories();
 }
 
@@ -1543,7 +1507,6 @@ function migrateCategories() {
   };
   state.movimenti.forEach(apply);
   state.ricorrenti.forEach(apply);
-  state.indefinite.forEach(apply);
 }
 
 function saveState(opts) {
@@ -1656,36 +1619,10 @@ function expandRicorrente(r, untilDate) {
   return occorrenze;
 }
 
-function expandIndefinita(i, untilDate) {
-  const occorrenze = [];
-  const start = parseDate(i.dataInizio);
-  const end = i.attiva === false && i.dataChiusura ? parseDate(i.dataChiusura) : untilDate;
-  const stop = end < untilDate ? end : untilDate;
-  let d = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-  let safety = 0;
-  while (d <= stop && safety < 1000) {
-    occorrenze.push({
-      id: i.id + '_' + ymd(d),
-      tipo: i.tipo,
-      data: ymd(d),
-      importo: i.importo,
-      categoria: i.categoria || '',
-      descrizione: i.descrizione,
-      _TitleRaw: i.descrizione,
-      _source: 'indefinita',
-      _refId: i.id
-    });
-    d.setMonth(d.getMonth() + 1);
-    safety++;
-  }
-  return occorrenze;
-}
-
 function getAllMovimenti() {
   const today = new Date();
   const all = [...state.movimenti.map(m => ({...m, _source: 'manuale'}))];
   state.ricorrenti.forEach(r => all.push(...expandRicorrente(r, today)));
-  state.indefinite.forEach(i => all.push(...expandIndefinita(i, today)));
   return all.sort((a,b) => b.data.localeCompare(a.data));
 }
 
@@ -1722,11 +1659,6 @@ function calcRecurringMonthly() {
     }[r.frequenza] || 1;
     total += sign * Number(r.importo) * factor;
   });
-  state.indefinite.forEach(i => {
-    if (i.attiva === false) return;
-    const sign = i.tipo === 'entrata' ? 1 : -1;
-    total += sign * Number(i.importo);
-  });
   return total;
 }
 
@@ -1741,13 +1673,6 @@ function calcUpcomingDeadlines(daysAhead = 60) {
   state.ricorrenti.forEach(r => {
     if (r.promemoriaAttivo === false) return;
     expandRicorrente(r, horizon).forEach(o => {
-      if (o.data >= todayStr && o.data <= horizonStr) list.push(o);
-    });
-  });
-
-  state.indefinite.forEach(i => {
-    if (i.attiva === false || i.promemoriaAttivo === false) return;
-    expandIndefinita(i, horizon).forEach(o => {
       if (o.data >= todayStr && o.data <= horizonStr) list.push(o);
     });
   });
@@ -1772,7 +1697,7 @@ async function requestWebNotifications() {
 function sendTestNotification() {
   if ('Notification' in window && Notification.permission === 'granted') {
     new Notification('💰 Saldo e Movimenti', {
-      body: 'I promemoria per le scadenze ricorrenti e indefinite sono attivi!',
+      body: 'I promemoria per le scadenze ricorrenti sono attivi!',
       icon: 'icon.svg'
     });
     showToast('Notifica inviata ✓');
@@ -1915,16 +1840,6 @@ function calcBudgetSuggerito() {
         upcoming += (r.tipo === 'entrata' ? -1 : 1) * Number(r.importo);
       }
     });
-  });
-
-  state.indefinite.forEach(i => {
-    if (i.attiva === false || i.dataInizio > endYmd) return;
-    const startDay = parseDate(i.dataInizio).getDate();
-    const dueDay = Math.min(startDay, endOfMonth.getDate());
-    const dueDate = new Date(today.getFullYear(), today.getMonth(), dueDay);
-    if (ymd(dueDate) > todayYmd) {
-      upcoming += (i.tipo === 'entrata' ? -1 : 1) * Number(i.importo);
-    }
   });
 
   const risparmio = Number(state.budget?.risparmioMensile) || 0;
@@ -2145,42 +2060,6 @@ function renderRicorrenti() {
   }).join('')}</div>`;
 }
 
-function renderIndefinite() {
-  const container = document.getElementById('indefiniteTable');
-  if (!state.indefinite.length) {
-    container.innerHTML = '<div class="empty-state">Nessuna spesa a periodo indefinito.</div>';
-    return;
-  }
-  container.innerHTML = `<div class="tx-list">${state.indefinite.map(i => {
-    const c = getCategory(i.categoria);
-    const remOn = i.promemoriaAttivo !== false;
-    return `
-      <div class="tx-item">
-        <div class="tx-avatar" style="background:${c.color}22; border:1px solid ${c.color}55">${c.icon}</div>
-        <div class="tx-main">
-          <div class="tx-title">${escapeHtml(i.descrizione)}</div>
-          <div class="tx-meta">
-            <span>Dal ${formatDate(i.dataInizio)}</span>
-            ${i.attiva === false
-              ? `<span class="badge badge-onetime">Chiusa il ${formatDate(i.dataChiusura)}</span>`
-              : `<span class="badge badge-indefinite">In corso</span>`}
-          </div>
-        </div>
-        <div class="tx-right">
-          <div class="tx-amount ${i.tipo === 'entrata' ? 'amount-pos' : 'amount-neg'}">
-            ${i.tipo === 'entrata' ? '+' : '−'} ${fmt(Number(i.importo))}/m
-          </div>
-          <button class="btn btn-secondary btn-small" onclick="toggleIndefinitaRem('${i.id}')">${remOn ? '🔔' : '🔕'}</button>
-          ${i.attiva !== false
-            ? `<button class="btn btn-secondary btn-small" onclick="closeIndefinita('${i.id}')">Chiudi</button>`
-            : `<button class="btn btn-success btn-small" onclick="reopenIndefinita('${i.id}')">Riapri</button>`}
-          <button class="btn btn-danger btn-small" onclick="deleteIndefinita('${i.id}')">✕</button>
-        </div>
-      </div>
-    `;
-  }).join('')}</div>`;
-}
-
 let statsMonth = null;
 function changeStatsMonth(delta) {
   const base = statsMonth || todayISO().slice(0,7);
@@ -2264,12 +2143,11 @@ function renderDiagnostica() {
   const el = document.getElementById('diagnostica');
   if (!el) return;
   const all = getAllMovimenti();
-  let totEntrate = 0, totUscite = 0, nRic = 0, nInd = 0;
+  let totEntrate = 0, totUscite = 0, nRic = 0;
   all.forEach(m => {
     if (m.tipo === 'entrata') totEntrate += Number(m.importo);
     else totUscite += Number(m.importo);
     if (m._source === 'ricorrente') nRic++;
-    if (m._source === 'indefinita') nInd++;
   });
   const saldo = (state.saldoIniziale || 0) + totEntrate - totUscite;
   el.innerHTML = `
@@ -2280,7 +2158,7 @@ function renderDiagnostica() {
       = <strong>Saldo attuale: <span class="${saldo >= 0 ? 'amount-pos' : 'amount-neg'}">${fmt(saldo)}</span></strong>
     </div>
     <div class="subtitle" style="margin-top:8px;">
-      Movimenti manuali: ${state.movimenti.length} · Rate ricorrenti: ${nRic} · Rate indefinite: ${nInd}
+      Movimenti manuali: ${state.movimenti.length} · Rate ricorrenti: ${nRic}
     </div>
   `;
 }
@@ -2290,7 +2168,6 @@ function renderAll() {
   renderBudget();
   renderMovimenti();
   renderRicorrenti();
-  renderIndefinite();
   renderStats();
   renderPromemoria();
   renderDiagnostica();
@@ -2308,7 +2185,6 @@ function formatDate(s) {
 function badgeFor(source) {
   if (source === 'manuale') return '';
   if (source === 'ricorrente') return '<span class="badge badge-recurring">Ricorrente</span>';
-  if (source === 'indefinita') return '<span class="badge badge-indefinite">Indefinita</span>';
   return '';
 }
 
@@ -2326,31 +2202,6 @@ function toggleRicorrenteRem(id) {
 function deleteRicorrente(id) {
   if (!confirm('Eliminare questa spesa ricorrente?')) return;
   state.ricorrenti = state.ricorrenti.filter(r => r.id !== id);
-  saveState();
-}
-function toggleIndefinitaRem(id) {
-  const i = state.indefinite.find(x => x.id === id);
-  if (!i) return;
-  i.promemoriaAttivo = i.promemoriaAttivo === false ? true : false;
-  saveState();
-}
-function deleteIndefinita(id) {
-  if (!confirm('Eliminare questa spesa indefinita?')) return;
-  state.indefinite = state.indefinite.filter(i => i.id !== id);
-  saveState();
-}
-function closeIndefinita(id) {
-  const i = state.indefinite.find(x => x.id === id);
-  if (!i) return;
-  i.attiva = false;
-  i.dataChiusura = todayISO();
-  saveState();
-}
-function reopenIndefinita(id) {
-  const i = state.indefinite.find(x => x.id === id);
-  if (!i) return;
-  i.attiva = true;
-  delete i.dataChiusura;
   saveState();
 }
 
@@ -2445,22 +2296,6 @@ document.getElementById('formRicorrente').addEventListener('submit', e => {
       dataFine: fd.get('dataFine') || null,
       categoria: fd.get('categoria'),
       descrizione: fd.get('descrizione'),
-      promemoriaAttivo: fd.get('promemoriaAttivo') !== null
-    });
-  });
-});
-
-document.getElementById('formIndefinita').addEventListener('submit', e => {
-  e.preventDefault();
-  validateAndCommit(e.target, (fd, importo) => {
-    state.indefinite.push({
-      id: uid(),
-      tipo: fd.get('tipo'),
-      importo: importo,
-      dataInizio: fd.get('dataInizio') || todayISO(),
-      categoria: fd.get('categoria'),
-      descrizione: fd.get('descrizione'),
-      attiva: true,
       promemoriaAttivo: fd.get('promemoriaAttivo') !== null
     });
   });
@@ -3520,7 +3355,6 @@ function renderStmtPreviewRows() {
           <select onchange="updateStmtRow(${idx}, 'mode', this.value)">
             <option value="manuale" ${r.mode === 'manuale' ? 'selected' : ''}>Singolo</option>
             <option value="ricorrente" ${r.mode === 'ricorrente' ? 'selected' : ''}>🔁 Ricorrente</option>
-            <option value="indefinita" ${r.mode === 'indefinita' ? 'selected' : ''}>♾️ Indefinita</option>
           </select>
           <div style="display:flex; align-items:center; justify-content:flex-end; gap:4px;">
             <button type="button" class="btn btn-secondary btn-small" style="padding:6px 8px;" onclick="flipStmtRowTipo(${idx})" title="Tocca per invertire Entrata/Uscita">
@@ -3569,7 +3403,7 @@ function confirmStatementImport() {
     showToast('Nessun movimento selezionato', true);
     return;
   }
-  let nMov = 0, nRic = 0, nInd = 0;
+  let nMov = 0, nRic = 0;
   chosen.forEach(r => {
     if (r.mode === 'ricorrente') {
       state.ricorrenti.push({
@@ -3584,18 +3418,6 @@ function confirmStatementImport() {
         promemoriaAttivo: true
       });
       nRic++;
-    } else if (r.mode === 'indefinita') {
-      state.indefinite.push({
-        id: uid(),
-        tipo: r.tipo,
-        importo: r.importo,
-        dataInizio: r.data,
-        categoria: r.categoria,
-        descrizione: r.descrizione,
-        attiva: true,
-        promemoriaAttivo: true
-      });
-      nInd++;
     } else {
       state.movimenti.push({
         id: uid(),
@@ -3618,7 +3440,7 @@ function confirmStatementImport() {
   checkStorage();
   checkInstallBanner();
   await loadState();
-  ['formMovimento','formRicorrente','formIndefinita'].forEach(f => {
+  ['formMovimento','formRicorrente'].forEach(f => {
     const inp = document.querySelector(`#${f} input[type=date]`);
     if (inp) inp.value = todayISO();
   });

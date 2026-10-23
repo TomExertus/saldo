@@ -1,7 +1,7 @@
 {
   "name": "Saldo e Movimenti",
   "short_name": "Saldo",
-  "description": "Tieni traccia di entrate, uscite, spese ricorrenti, indefinite, promemoria e iCloud.",
+  "description": "Tieni traccia di entrate, uscite, spese ricorrenti, promemoria e iCloud.",
   "lang": "it-IT",
   "start_url": "./index.html",
   "scope": "./",
