@@ -584,7 +584,7 @@
         <div id="statNet" class="stat-value">€ 0,00</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Fisse mensili</div>
+        <div class="stat-label">Spese ricorrenti</div>
         <div id="statRecurring" class="stat-value amount-neg">€ 0,00</div>
       </div>
     </div>
@@ -610,7 +610,7 @@
           <div id="budgetWeekly" class="budget-cell-value">—</div>
         </div>
         <div class="budget-cell">
-          <div class="budget-cell-label">Fisse residue</div>
+          <div class="budget-cell-label">Ricorrenti residue</div>
           <div id="budgetUpcoming" class="budget-cell-value">—</div>
         </div>
         <div class="budget-cell editable" onclick="editBudgetField('saldoIniziale', event)">
@@ -649,7 +649,7 @@
     </div>
     <div class="tab" data-tab="impostazioni">
       <span class="tab-icon">⚙️</span>
-      <span>Opzioni</span>
+      <span>Impostazioni</span>
     </div>
   </nav>
 
@@ -764,7 +764,7 @@
           <input type="date" name="dataInizio" required>
         </div>
         <div>
-          <label>Data fine (opzionale)</label>
+          <label>Data fine (opzionale · vuoto se a tempo indeterminato)</label>
           <input type="date" name="dataFine">
         </div>
         <div class="form-full">
@@ -884,7 +884,7 @@
     </div>
 
     <div class="panel">
-      <h3 class="panel-title">🔍 Verifica dettagliata saldo</h3>
+      <h3 class="panel-title">🔍 Riepilogo e Riconciliazione Saldo</h3>
       <div id="diagnostica" style="font-size:14px; line-height:1.8;"></div>
     </div>
 
